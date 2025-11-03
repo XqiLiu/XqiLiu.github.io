@@ -79,11 +79,15 @@
 
 
 
-<meta property="og:type" content="website">
+<meta name="description" content="简介该结构体本质上是KVM内核模块与用户空间VMM（如QEMU）之间进行高速、低延迟通信的共享内存区域。  QEMU (用户空间)：在公告板上写下 “请开始运行，顺便，这是你（vCPU）需要更新的寄存器信息”（例如设置 kvm_dirty_regs）。  KVM (内核空间)：接管 vCPU，开始运行。  vCPU (客户机)：运行…直到遇到一个它自己无法处理的事情（如 I&#x2F;O 操作），">
+<meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://xqiliu.github.io/page/2/index.html">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/KVM_RUN%E5%85%B1%E4%BA%AB%E9%A1%B5%EF%BC%88struct%20kvm_run%EF%BC%89/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="简介该结构体本质上是KVM内核模块与用户空间VMM（如QEMU）之间进行高速、低延迟通信的共享内存区域。  QEMU (用户空间)：在公告板上写下 “请开始运行，顺便，这是你（vCPU）需要更新的寄存器信息”（例如设置 kvm_dirty_regs）。  KVM (内核空间)：接管 vCPU，开始运行。  vCPU (客户机)：运行…直到遇到一个它自己无法处理的事情（如 I&#x2F;O 操作），">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-03T09:11:19.956Z">
+<meta property="article:modified_time" content="2025-10-27T03:58:19.099Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -115,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/page/2/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/KVM学习笔记/KVM/kvm相关基本机制/KVM_RUN共享页（struct kvm_run）/"/>
 
 
 
 
 
-  <title>Hexo</title>
+  <title> | Hexo</title>
   
 
 
@@ -140,8 +144,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -244,9 +247,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -259,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/KVM_RUN%E5%85%B1%E4%BA%AB%E9%A1%B5%EF%BC%88struct%20kvm_run%EF%BC%89/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -276,9 +279,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" itemprop="url">Untitled</a></h1>
+          <h1 class="post-title" itemprop="name headline"></h1>
         
 
         <div class="post-meta">
@@ -331,163 +332,12 @@
 
                 
                 
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          
-首先在全局入口处的 kvm_init 对每个cpu都尝试获得了专属的变量地址
-
-1234567	    for_each_possible_cpu(cpu) &#123;        if (!alloc_cpumask_var_node(&amp;per_cpu(cpu_kick_mask, cpu),                        GFP_KERNEL, cpu_to_node(cpu))) &#123;            r = -ENOMEM;            goto err_cpu_kick_mask;        &#125;    &#125;	
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/" itemprop="url">Untitled</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
-                2025-11-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
                   , 
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM</span>
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
+                    <span itemprop="name">kvm相关基本机制</span>
                   </a>
                 </span>
 
@@ -504,6 +354,11 @@
           
           
 
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
           
 
           
@@ -523,25 +378,62 @@
       
 
       
-        
-          
-          如其他的ioctl一样，用户态程序调用：ioctl-&gt;sys_ioctl(系统调用层)-&gt;vfs_ioctl()（VFS层）-&gt;kvm_dev_ioctl()
-create_vm接下来对kvm_dev_ioctl()的注册的行为进行分析：
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>该结构体本质上是<strong>KVM内核模块</strong>与<strong>用户空间VMM</strong>（如QEMU）之间进行高速、低延迟通信的共享内存区域。</p>
+<ul>
+<li><p><strong>QEMU (用户空间)</strong>：在公告板上写下 “请开始运行，顺便，这是你（vCPU）需要更新的寄存器信息”（例如设置 <code>kvm_dirty_regs</code>）。</p>
+</li>
+<li><p><strong>KVM (内核空间)</strong>：接管 vCPU，开始运行。</p>
+</li>
+<li><p><strong>vCPU (客户机)</strong>：运行…直到遇到一个它自己无法处理的事情（如 I&#x2F;O 操作），触发 <strong>VM-Exit</strong>。</p>
+</li>
+<li><p><strong>KVM (内核空间)</strong>：捕获 VM-Exit，暂停 vCPU，然后在公告板上写下 “运行暂停！原因：“I&#x2F;O 操作”，详情：“端口 0x3f8, 写入数据 ‘A’”。</p>
+</li>
+<li><p><strong>QEMU (用户空间)</strong>：<code>KVM_RUN</code> 调用返回，QEMU 立刻查看公告板，”哦，原来是 I&#x2F;O。我来模拟一下向 0x3f8 端口写 ‘A’”。</p>
+</li>
+<li><p>模拟完成后，QEMU 擦掉公告板，再次调用 <code>KVM_RUN</code>，循环往复。</p>
+</li>
+</ul>
+<h1 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h1><p>虚拟化环境中， [[VM-Exit]]发生的极其频繁（每秒成千上万次频率）。VM-Exit意味着控制权从Guest交还给Host。<br>如果每次VM-Exit，用户空间的QEMU都需要通过<code>read()</code>&#x2F;<code>write()</code>等系统调用来从内核获取vCPU退出的原因和数据，将会产生巨大开销。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>核心机制是<code>mmap()</code>系统调用和<code>struct kvm_run</code>结构体。<br>1 .建立共享：<code>mmap()</code></p>
+<ol>
+<li>当 QEMU 创建一个 vCPU 时，它会通过 <code>KVM_CREATE_VCPU</code> ioctl 获得一个代表该 vCPU 的文件描述符（<code>vcpu_fd</code>）。</li>
+<li>紧接着，QEMU 会对这个 <code>vcpu_fd</code> 调用 <code>mmap()</code>。</li>
+<li>KVM 内核模块会响应这个 <code>mmap()</code>，在内核中分配一个（或多个）内存页，用于 <code>struct kvm_run</code> 结构体，并将这块<strong>物理内存</strong>映射到 QEMU 进程的<strong>虚拟地址空间</strong>中。<br><strong>结果</strong>：QEMU（用户空间）和 KVM（内核空间）同时拥有了指向<strong>同一块物理内存</strong>的指针。<br>2 .使用共享页通信<br>这块共享内存就是具体的结构体<code>kvm_run</code>，包含了vCPU运行所需要的元数据</li>
+</ol>
+<ul>
+<li><code>__u32 exit_reason</code><ul>
+<li>这是最重要的字段，内核用它来告诉QEMU为什么vCPU停止运行了（例如 <code>KVM_EXIT_IO</code>, <code>KVM_EXIT_MMIO</code>, <code>KVM_EXIT_INTR</code>）。</li>
+<li>一个巨大的<code>union</code>结构：<ul>
+<li><ul>
+<li>这个联合体根据 <code>exit_reason</code> 的不同而有不同的含义，实现了内存的复用。</li>
+</ul>
+</li>
+<li><code>struct kvm_io io;</code>：如果 <code>exit_reason</code> 是 <code>KVM_EXIT_IO</code>，这个结构里会包含 I&#x2F;O 端口、数据大小、读写方向等。</li>
+<li><code>struct kvm_mmio mmio;</code>：如果 <code>exit_reason</code> 是 <code>KVM_EXIT_MMIO</code>，这里会包含 MMIO 的物理地址、数据、长度等。</li>
+<li><code>struct kvm_exception ex;</code>：用于注入异常。</li>
+<li>… 以及其他各种退出原因的结构体。</li>
+</ul>
+</li>
+<li><code>__u64 cr8</code><ul>
+<li>这是在QEMU调用KVM_RUN之前，用来传入数据给内核的例子，告诉内核vCPU的中断优先级（[[APIC中断虚拟化]]）应该是多少。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="总结：KVM-RUN-的完整生命周期"><a href="#总结：KVM-RUN-的完整生命周期" class="headerlink" title="总结：KVM_RUN 的完整生命周期"></a>总结：KVM_RUN 的完整生命周期</h1><ol>
+<li><strong>QEMU (写者)</strong>：在调用 <code>KVM_RUN</code> 之前，向 <code>kvm_run</code> 共享页写入“请求”数据（如 <code>kvm_dirty_regs</code>, <code>cr8</code>）。</li>
+<li><strong>QEMU (调用者)</strong>：调用 <code>ioctl(vcpu_fd, KVM_RUN, ...)</code>，线程在内核中阻塞。</li>
+<li><strong>KVM (读者)</strong>：在 <code>kvm_arch_vcpu_ioctl_run</code> 中，读取 <code>kvm_run</code> 共享页中的“请求”（如 <code>sync_regs(vcpu)</code>，<code>kvm_set_cr8(...)</code>）。</li>
+<li><strong>KVM (运行者)</strong>：调用 <code>vcpu_run()</code>，进入 Guest 模式，vCPU 开始执行指令。</li>
+<li><strong>(VM-Exit)</strong>：Guest 执行敏感操作，触发 VM-Exit，返回到 KVM。</li>
+<li><strong>KVM (写者)</strong>：将 <code>exit_reason</code> 和退出数据（如 <code>kvm_run-&gt;io</code>）填入<strong>同一个</strong> <code>kvm_run</code> 共享页。</li>
+<li><strong>KVM (返回者)</strong>：<code>ioctl</code> 调用返回，QEMU 线程被唤醒。</li>
+<li><strong>QEMU (读者)</strong>：立即查看 <code>kvm_run</code> 共享页，读取 <code>exit_reason</code>，模拟硬件操作。</li>
+<li><strong>循环</strong>：QEMU 处理完毕，回到第 1 步，再次调用 <code>KVM_RUN</code>。</li>
+</ol>
+<p>这个<strong>零拷贝</strong>（Zero-Copy）的共享内存机制，是 KVM 能够实现高性能虚拟化的基石。</p>
 
-kvm_dev_ioctl_create_vm(unsigned long type)
-
-123fd = get_unused_fd_flags(O_CLOEXEC);    if (fd &lt; 0)        return fd;
-获取一个没有用过的fd。2. 接下来fd name传递给kvm_create_vm
-1struct
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
       
     </div>
     
@@ -558,179 +450,32 @@ kvm_dev_ioctl_create_vm(unsigned long type)
       
 
       
-
-      
-
       
       
-        <div class="post-eof"></div>
+
       
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url">Untitled</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
-                2025-11-03
-              </time>
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/IRQ%20Window%20Exit/" rel="next" title="">
+                <i class="fa fa-chevron-left"></i> 
+              </a>
             
+          </div>
 
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
             
-
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/kvm%E4%BF%A1%E5%8F%B7%E4%B8%8E%E9%98%BB%E5%A1%9E%E6%9C%BA%E5%88%B6/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
             
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
+          </div>
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          
-          kvm_enter_guest是一个很长的函数。还是一个有大量分发的函数。所以可以把该函数分为4阶段来进行分析：
-
-进入Guest前的最后准备
-进入Guest内部和退出循环
-退出Guest后的善后处理
-分发退出事件。
-
-而各个阶段之间的临界点就是如下代码块：
-12345678for (;;) &#123;	// ...	exit_fastpath = kvm_x86_call(vcpu_run)(vcpu,						   req_immediate_exit);	if (likely(exit_fastpath != EXIT_FASTPATH_REENTER_GUEST))		break;
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </div>
@@ -740,14 +485,11 @@ kvm_dev_ioctl_create_vm(unsigned long type)
   </article>
 
 
-    
-  </section>
 
-  
-  <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/">&lt;</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
-  </nav>
-
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -755,6 +497,10 @@ kvm_dev_ioctl_create_vm(unsigned long type)
 
 
           
+
+  
+
+
 
         </div>
         
@@ -775,8 +521,17 @@ kvm_dev_ioctl_create_vm(unsigned long type)
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -827,6 +582,22 @@ kvm_dev_ioctl_create_vm(unsigned long type)
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%9C%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">作用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9AKVM-RUN-%E7%9A%84%E5%AE%8C%E6%95%B4%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">4.</span> <span class="nav-text">总结：KVM_RUN 的完整生命周期</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -980,6 +751,10 @@ kvm_dev_ioctl_create_vm(unsigned long type)
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 

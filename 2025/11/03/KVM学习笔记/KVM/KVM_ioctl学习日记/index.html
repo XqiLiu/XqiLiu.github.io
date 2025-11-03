@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="如其他的ioctl一样，用户态程序调用：ioctl-&gt;sys_ioctl(系统调用层)-&gt;vfs_ioctl()（VFS层）-&gt;kvm_dev_ioctl() create_vm接下来对kvm_dev_ioctl()的注册的行为进行分析：  kvm_dev_ioctl_create_vm(unsigned long type)  123fd &#x3D; get_unused_fd_fla">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="如其他的ioctl一样，用户态程序调用：ioctl-&gt;sys_ioctl(系统调用层)-&gt;vfs_ioctl()（VFS层）-&gt;kvm_dev_ioctl() create_vm接下来对kvm_dev_ioctl()的注册的行为进行分析：  kvm_dev_ioctl_create_vm(unsigned long type)  123fd &#x3D; get_unused_fd_fla">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-03T09:11:19.947Z">
+<meta property="article:modified_time" content="2025-10-27T09:09:25.649Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/KVM学习笔记/KVM/KVM_ioctl学习日记/"/>
+
+
+
+
+
+  <title> | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>如其他的ioctl一样，用户态程序调用：<code>ioctl</code>-&gt;<code>sys_ioctl</code>(系统调用层)-&gt;<code>vfs_ioctl()</code>（VFS层）-&gt;<code>kvm_dev_ioctl()</code></p>
+<h2 id="create-vm"><a href="#create-vm" class="headerlink" title="create_vm"></a>create_vm</h2><p>接下来对<code>kvm_dev_ioctl()</code>的注册的行为进行分析：</p>
+<ol>
+<li><code>kvm_dev_ioctl_create_vm(unsigned long type)</code></li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fd = <span class="built_in">get_unused_fd_flags</span>(O_CLOEXEC);</span><br><span class="line">    <span class="keyword">if</span> (fd &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> fd;</span><br></pre></td></tr></table></figure>
+<p>获取一个没有用过的fd。<br>2. 接下来fd name传递给<code>kvm_create_vm</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">kvm</span> *kvm = <span class="built_in">kvm_arch_alloc_vm</span>();</span><br></pre></td></tr></table></figure>
+<p>这个用于创建一个KVM对象并分配相应内存。这个KVM结构体包含了所有的虚拟机状态，例如vCPU、内存、设备。同时作为句柄，后续的所有操作基于这个kvm对象<br>3. <code>KVM_MMU_LOCK_INIT(kvm)</code>用于初始化内存管理单元(MMU)的锁。<br>	1. 虚拟机需要管理客户机的物理地址到宿主机的物理地址的映射(GPA-&gt;HPA)<br>	2. 多个vCPU可能访问同一个页表，需要锁保护<br>4. 增加当前用户进程下的进程内存管理结构体计数（保证引用计数不为0），并同样的赋值给结构体kvm。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">    <span class="built_in">mmgrab</span>(current-&gt;mm);</span><br><span class="line">    kvm-&gt;mm = current-&gt;mm;</span><br></pre></td></tr></table></figure>
+<ol start="5">
+<li><code>kvm_eventfd_init(kvm)</code><br>用于虚拟机写入特定I&#x2F;O端口时通知用户态或是用户态写入<code>eventfd</code>时向虚拟机注入中断。</li>
+<li>接下里初始化各种同步锁</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mutex_init</span>(&amp;kvm-&gt;lock);</span><br><span class="line">    <span class="built_in">mutex_init</span>(&amp;kvm-&gt;irq_lock);</span><br><span class="line">    <span class="built_in">mutex_init</span>(&amp;kvm-&gt;slots_lock);</span><br><span class="line">    <span class="built_in">mutex_init</span>(&amp;kvm-&gt;slots_arch_lock);</span><br><span class="line">    <span class="built_in">spin_lock_init</span>(&amp;kvm-&gt;mn_invalidate_lock);</span><br></pre></td></tr></table></figure>
+<p>因为可能：</p>
+<ul>
+<li>多个 vCPU 并发运行</li>
+<li>用户态可能并发调用 ioctl</li>
+<li>内核 MMU notifier 回调可能异步触发</li>
+</ul>
+<ol start="7">
+<li>可睡眠的RCU同步机制初始化[[SRCU]]</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">init_srcu_struct</span>(&amp;kvm-&gt;srcu))</span><br><span class="line">    <span class="keyword">goto</span> out_err_no_srcu;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">init_srcu_struct</span>(&amp;kvm-&gt;irq_srcu))</span><br><span class="line">        <span class="keyword">goto</span> out_err_no_irq_srcu;</span><br></pre></td></tr></table></figure>
+<p> RCU是读者无锁，写者复制，通过等待一个宽限期来确保旧数据可以被安全地释放。</p>
+<ol start="8">
+<li><code>r = kvm_init_irq_routing(kvm)</code>中断路由的初始化，可以开新的一篇来笔记记录</li>
+<li>内存双插槽系统的初始化</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="built_in">kvm_arch_nr_memslot_as_ids</span>(kvm); i++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; <span class="number">2</span>; j++) &#123;</span><br><span class="line">            slots = &amp;kvm-&gt;__memslots[i][j];</span><br><span class="line">            <span class="built_in">atomic_long_set</span>(&amp;slots-&gt;last_used_slot, (<span class="type">unsigned</span> <span class="type">long</span>)<span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">            slots-&gt;hva_tree = RB_ROOT_CACHED;</span><br><span class="line">            slots-&gt;gfn_tree = RB_ROOT;</span><br><span class="line">            <span class="built_in">hash_init</span>(slots-&gt;id_hash);</span><br><span class="line">            slots-&gt;node_idx = j;</span><br><span class="line">            <span class="comment">/* Generations must be different for each address space. */</span></span><br><span class="line">            slots-&gt;generation = i;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">rcu_assign_pointer</span>(kvm-&gt;memslots[i], &amp;kvm-&gt;__memslots[i][<span class="number">0</span>]);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>KVM 中有两种截然不同的内存操作路径：</p>
+<ol>
+<li><strong>快速路径 (Fast Path)</strong>：vCPU 运行时发生缺页异常（page fault），KVM 需要<strong>极快地</strong>查询内存插槽，将客户机物理地址（GPA）转换为主机虚拟地址（HVA）。这个操作每秒可能发生成千上万次，<strong>性能是第一要求</strong>。</li>
+<li><strong>慢速路径 (Slow Path)</strong>：管理员通过 QEMU management 接口<strong>动态地修改虚拟机的内存布局</strong>，比如内存热插拔（hotplug&#x2F;unplug）。这个操作不频繁，但<strong>过程比较复杂</strong>，需要修改多个数据结构<br>内存插槽存储的是元数据页表。通过一槽执行快速路径的读，同时拷贝另一个槽进行写修改。最后<code>rcu_assign_pointer()</code>(rcu机制的安全指针赋值)切换<code>kvm-&gt;memslots</code>到另一插槽，这一过程是原子的、快速的。从而完成无缝修改</li>
+</ol>
+<p>AI总结:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────────────────────┐</span><br><span class="line">│              用户态 (QEMU/libvirt)                       │</span><br><span class="line">├─────────────────────────────────────────────────────────┤</span><br><span class="line">│  kvm_fd = open(&quot;/dev/kvm&quot;, O_RDWR)                     │</span><br><span class="line">│  vm_fd = ioctl(kvm_fd, KVM_CREATE_VM, 0)               │</span><br><span class="line">│  vcpu_fd = ioctl(vm_fd, KVM_CREATE_VCPU, 0)            │</span><br><span class="line">│  ioctl(vcpu_fd, KVM_RUN, 0)                            │</span><br><span class="line">└─────────────────────────────────────────────────────────┘</span><br><span class="line">                         ↓</span><br><span class="line">┌─────────────────────────────────────────────────────────┐</span><br><span class="line">│                    内核 VFS 层                           │</span><br><span class="line">├─────────────────────────────────────────────────────────┤</span><br><span class="line">│  sys_ioctl(fd, cmd, arg)                               │</span><br><span class="line">│      ↓                                                  │</span><br><span class="line">│  file = fget(fd)                                       │</span><br><span class="line">│  file-&gt;f_op-&gt;unlocked_ioctl(file, cmd, arg)           │</span><br><span class="line">└─────────────────────────────────────────────────────────┘</span><br><span class="line">                         ↓</span><br><span class="line">        ┌────────────────┴────────────────┐</span><br><span class="line">        ↓                ↓                 ↓</span><br><span class="line">┌──────────────┐  ┌──────────────┐  ┌──────────────┐</span><br><span class="line">│  kvm_fd      │  │   vm_fd      │  │  vcpu_fd     │</span><br><span class="line">├──────────────┤  ├──────────────┤  ├──────────────┤</span><br><span class="line">│ kvm_chardev  │  │  kvm_vm_fops │  │ kvm_vcpu_fops│</span><br><span class="line">│    _ops      │  │              │  │              │</span><br><span class="line">├──────────────┤  ├──────────────┤  ├──────────────┤</span><br><span class="line">│ kvm_dev      │  │  kvm_vm      │  │  kvm_vcpu    │</span><br><span class="line">│   _ioctl     │  │    _ioctl    │  │    _ioctl    │</span><br><span class="line">└──────────────┘  └──────────────┘  └──────────────┘</span><br><span class="line">      ↓                  ↓                  ↓</span><br><span class="line">┌──────────────┐  ┌──────────────┐  ┌──────────────┐</span><br><span class="line">│ 系统级操作   │  │ 虚拟机级操作 │  │ vCPU级操作   │</span><br><span class="line">├──────────────┤  ├──────────────┤  ├──────────────┤</span><br><span class="line">│ • 获取版本   │  │ • 创建vCPU   │  │ • 运行vCPU   │</span><br><span class="line">│ • 创建VM     │  │ • 设置内存   │  │ • 读写寄存器 │</span><br><span class="line">│ • 检查扩展   │  │ • 创建设备   │  │ • 设置CPUID  │</span><br><span class="line">│             │  │ • 中断路由   │  │ • 调试       │</span><br><span class="line">└──────────────┘  └──────────────┘  └──────────────┘</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="KVM-CREATE-VCPU"><a href="#KVM-CREATE-VCPU" class="headerlink" title="KVM_CREATE_VCPU"></a>KVM_CREATE_VCPU</h2><p>该函数在<code>kvm_vm_ioctl()</code>中。</p>
+<ol>
+<li><code>kvm_vcpu_init(vcpu, kvm, id)</code><br>该函数中，值得注意的行为是注册了一个notifier。它为 vCPU 注册了一个<strong>抢占通知器</strong>。这意味着，当宿主机调度器决定要抢占（暂停）这个 vCPU 所在的内核线程时，会先通过 <code>kvm_preempt_ops</code> 里的函数<strong>通知 KVM</strong>。这给了 KVM 一个机会，在 vCPU 线程被暂停前，做一些必要的清理或状态保存工作。</li>
+<li><code>kvm_arch_vcpu_create</code><br>除开前面的大量初始化，这个函数真正地创建了一个vcpu。<ol>
+<li><code>gpc</code>和<code>pv_time</code><br> 半虚拟化是为了让Guest OS意识到自己正在运行在虚拟环境中。paravirtual Time机制是半虚拟化思想在时间同步上的体现，具体机制包括<ul>
+<li><strong>共享内存</strong>：KVM 在宿主机内存中分配一小块内存页。</li>
+<li><strong>KVM 写入</strong>：KVM&#x2F;Host 会持续地将<strong>准确的、稳定的</strong>时间信息（比如当前的纳秒时间戳、稳定的 TSC 频率等）写入这块共享内存。</li>
+<li><strong>Guest 读取</strong>：Guest OS（如果加载了对应的 <code>kvm_clock</code> 驱动）不再完全依赖自己不靠谱的 TSC，而是直接<strong>通过内存读取</strong>这块共享区域，从而以极低的开销获得准确的时间。<br> gpc就是kvm_vcpu内部用于管理pv_time的数据结构。<br> 2.<code>kvm_mmu_create</code><br> 这个是cpu创建的核心工作之一。创建mmu操作在内存初始化包括如下：</li>
+<li>初始化PTE列表描述符，管理PTE（页表项）的反向映射链表， 用于追踪哪些影子页表指向同一个HPA</li>
+<li>初始化MMU header缓存</li>
+<li>初始化影子页面缓存，即分配影子页表页面，用于存储实际的页表数据。<br> 第二部分用于准备嵌套虚拟化</li>
+</ul>
+ <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">		    vcpu-&gt;arch.mmu = &amp;vcpu-&gt;arch.root_mmu;</span><br><span class="line">		    vcpu-&gt;arch.walk_mmu = &amp;vcpu-&gt;arch.root_mmu;</span><br></pre></td></tr></table></figure>
+<p> 这一部分在大多数情况下是指向root_mmu的指针就好，但是留了<code>guest_mmu</code>作为嵌套式虚拟化的接口。<br> 随后调用了内部辅助函数接口：<br> <code>static int __kvm_mmu_create(struct kvm_vcpu *vcpu, struct kvm_mmu *mmu)</code><br> 用于进行创建单个MMU<br> 该函数内部对MMU的根系统hpa等内容进行了标准的invalid初始化。<br> 检查是否需要启用tpa（仅有32位系统需要在这里提前处理，其余情况推迟处理）<br> 综上，目前MMU的架构概览可以总结为：</p>
+</li>
+</ol>
+</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">struct</span> <span class="title class_">kvm_vcpu</span> &#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">kvm_vcpu_arch</span> &#123;</span><br><span class="line">        <span class="comment">// 主要的 MMU 上下文</span></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">kvm_mmu</span> *mmu;        <span class="comment">// 当前使用的 MMU</span></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">kvm_mmu</span> *walk_mmu;   <span class="comment">// 页表遍历用的 MMU</span></span><br><span class="line">        <span class="comment">// 两个 MMU 实例</span></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">kvm_mmu</span> root_mmu;    <span class="comment">// 正常模式</span></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">kvm_mmu</span> guest_mmu;   <span class="comment">// 嵌套虚拟化（L2 客户机）</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">// MMU 缓存</span></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">kvm_mmu_memory_cache</span> mmu_pte_list_desc_cache;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">kvm_mmu_memory_cache</span> mmu_page_header_cache;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">kvm_mmu_memory_cache</span> mmu_shadow_page_cache;</span><br><span class="line">    &#125; arch;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>影子页表的机制已经几乎不适用了，几乎所有的cpu都支持硬件虚拟化加速，走EPT&#x2F;NPT</p>
+<h2 id="KVM-RUN"><a href="#KVM-RUN" class="headerlink" title="KVM_RUN"></a>KVM_RUN</h2><p>kvm的三层io设计中最后一层<code>kvm_vcpu_ioctl</code>中的第一个case。这是kvm执行逻辑的关键。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> KVM_RUN: &#123;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">pid</span> *oldpid;</span><br><span class="line">        r = -EINVAL;</span><br><span class="line">        <span class="keyword">if</span> (arg)</span><br><span class="line">            <span class="keyword">goto</span> out;</span><br><span class="line">        oldpid = <span class="built_in">rcu_access_pointer</span>(vcpu-&gt;pid);</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">unlikely</span>(oldpid != <span class="built_in">task_pid</span>(current))) &#123;</span><br><span class="line">            <span class="comment">/* The thread running this VCPU changed. */</span></span><br><span class="line">            <span class="keyword">struct</span> <span class="title class_">pid</span> *newpid;</span><br><span class="line">            r = <span class="built_in">kvm_arch_vcpu_run_pid_change</span>(vcpu);</span><br><span class="line">            <span class="keyword">if</span> (r)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            newpid = <span class="built_in">get_task_pid</span>(current, PIDTYPE_PID);</span><br><span class="line">            <span class="built_in">rcu_assign_pointer</span>(vcpu-&gt;pid, newpid);</span><br><span class="line">            <span class="keyword">if</span> (oldpid)</span><br><span class="line">                <span class="built_in">synchronize_rcu</span>();</span><br><span class="line">            <span class="built_in">put_pid</span>(oldpid);</span><br><span class="line">        &#125;</span><br><span class="line">        vcpu-&gt;wants_to_run = !<span class="built_in">READ_ONCE</span>(vcpu-&gt;run-&gt;immediate_exit__unsafe);</span><br><span class="line">        r = <span class="built_in">kvm_arch_vcpu_ioctl_run</span>(vcpu);</span><br><span class="line">        vcpu-&gt;wants_to_run = <span class="literal">false</span>;</span><br><span class="line">  </span><br><span class="line">        <span class="built_in">trace_kvm_userspace_exit</span>(vcpu-&gt;run-&gt;exit_reason, r);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>这一段代码首先是对于pid的验证，都是通过rcu安全读写更新的的。<br>之后进行了一个原子的读READ_ONCE vcpu-&gt;run这一共享内存区域。<br>核心功能在<code>kvm_arch_vcpu_ioctl_run</code>函数内部：</p>
+<ol>
+<li><code>vcpu_load</code><br> 这一函数负责加载vcpu到物理cpu上的函数。代码如下 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">	<span class="function"><span class="type">void</span> <span class="title">vcpu_load</span><span class="params">(<span class="keyword">struct</span> kvm_vcpu *vcpu)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="type">int</span> cpu = <span class="built_in">get_cpu</span>();</span><br><span class="line"></span><br><span class="line">    __this_cpu_write(kvm_running_vcpu, vcpu);</span><br><span class="line">    <span class="built_in">preempt_notifier_register</span>(&amp;vcpu-&gt;preempt_notifier);</span><br><span class="line">    <span class="built_in">kvm_arch_vcpu_load</span>(vcpu, cpu);</span><br><span class="line">    <span class="built_in">put_cpu</span>();</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>get_cpu</code>和<code>put_cpu</code>是一对用于获取当前执行的cpu id号的函数，并能保证在两函数调用之间不会切换为其他的cpu执行，从而保证了操作的原子性。</li>
+<li><code> __this_cpu_write(kvm_running_vcpu, vcpu)</code>这一操作中的<code>kvm_ruinning_vcpu</code>是全局定义的per-CPU变量，每个物理CPU都有自己独一无二的副本。通过它将当前的vcpu和这个物理CPU副本进行构建映射关系。当内核中其他部分（中断处理或是VM-Exit）需要快速知道当前物理CPU上运行哪个vCPU，读者这个per-CPU变量就可以立即获得。</li>
+<li><code>preempt_notifier_register(&amp;vcpu-&gt;preempt_notifier)</code>这个函数注册了一个抢占通知器。为vCPU创建保护机制。如果CPU上运行着这个vCPU，但如果内核调度器需要抢占</li>
+</ul>
+<ol start="2">
+<li>CR8机制：[[APIC中断虚拟化]] </li>
+<li>核心函数<code>static int vcpu_run(struct kvm_vcpu *vcpu)</code><br> 这个函数的是绝对核心的函数。是vCPU自己的<strong>内核态执行循环</strong><br> 简单来说，这个函数是一个<strong>状态机</strong>，它决定了vCPU应该是运行还是睡眠。并且处理哪些不需要返回到用户空间（QEMU）的轻量级VM-Exit。<br> <strong>核心机制：内核态执行循环</strong><ul>
+<li>vcpu_run中的内核循环执行<code>for(;;)</code>提示了不是所有的VM-Exit都会返回给QEMU。KVM会尽最大的努力在内核态就<strong>内部处理</strong>掉VM-Exit，然后立即再次进入Guest。而不是返回到QEMU 。<br> 这个循环的逻辑是：</li>
+</ul>
+<ol>
+<li>检查vCPU是否是应该运行？（<code>kvm_vcpu_running(vcpu)</code>）<ul>
+<li><code>true</code>（运行态）：调用<code>vcpu_enter_guest(vcpu)</code>。这是vCPU的<strong>热路径</strong>。vCPU在Guest模式下运行，直到发生了VM-Exit。[[kvm_enter_guest学习笔记]]</li>
+<li><code>false</code>：vCPU不想运行（例如Guest OS执行了<code>HLT</code>停机指令）。此时调用<code>vcpu_block(vcpu)</code>，让 vCPU 线程进入<strong>可中断睡眠</strong>，释放物理 CPU。</li>
+</ul>
+</li>
+<li>处理返回值<code>r</code><ul>
+<li><code>r&lt;=0</code>：发生了必须由用户空间(QEMU)处理的事件。或者一个错误。此时break并把控制权交给上一层的ioctl函数（<code>kvm_arch_vcpu_ioctl_run</code>），最终会返回给QEMU。</li>
+<li><code>r&gt;0</code>：则继续高性能执行。这意味着<code>vcpu_enter_guest</code>内部完成了VM-Exit的发生和处理，并且不需要QEMU来进入。</li>
+</ul>
+</li>
+<li>循环体内部进行一些轻量级的事件处理的收尾工作，为下一次的<code>vcpu_enter_guest</code> 做准备。<ul>
+<li><code>kvm_inject_pending_timer_irqs(vcpu)</code>：检查是否有虚拟时钟中断到期了？如果有，在这里注入，准备在下一次 VM-Entry 时传递给 Guest。</li>
+<li><code>kvm_xen_...</code>：处理 Xen的事件。</li>
+<li><code>KVM_EXIT_IRQ_WINDOW_OPEN</code>：这是一个特殊的退出请求。[[IRQ Window Exit]]</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id=""><a href="#" class="headerlink" title=""></a></h2>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" rel="next" title="">
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#create-vm"><span class="nav-number">1.</span> <span class="nav-text">create_vm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#KVM-CREATE-VCPU"><span class="nav-number">2.</span> <span class="nav-text">KVM_CREATE_VCPU</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#KVM-RUN"><span class="nav-number">3.</span> <span class="nav-text">KVM_RUN</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text"></span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

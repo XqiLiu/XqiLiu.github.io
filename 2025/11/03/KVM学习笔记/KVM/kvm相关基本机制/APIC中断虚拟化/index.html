@@ -79,11 +79,15 @@
 
 
 
-<meta property="og:type" content="website">
+<meta name="description" content="虚拟化的挑战：[[Linux中断处理]]guest操作系统不知道自己运行在虚拟机里。他会像在物理机上一样，频繁读写CR8来管理中断。在早期的虚拟化中，每一次对CR8的访问都会导致VM-Exit，CPU控制权交还给KVM，KVM再去模拟对vAPIC的访问。这个开销是极其巨大的。 KVM虚拟APIC的两种模式KVM提供了两种APIC虚拟化 模式一： 用户空间模拟（Split IRQChip）这是古老、">
+<meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://xqiliu.github.io/page/2/index.html">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/APIC%E4%B8%AD%E6%96%AD%E8%99%9A%E6%8B%9F%E5%8C%96/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="虚拟化的挑战：[[Linux中断处理]]guest操作系统不知道自己运行在虚拟机里。他会像在物理机上一样，频繁读写CR8来管理中断。在早期的虚拟化中，每一次对CR8的访问都会导致VM-Exit，CPU控制权交还给KVM，KVM再去模拟对vAPIC的访问。这个开销是极其巨大的。 KVM虚拟APIC的两种模式KVM提供了两种APIC虚拟化 模式一： 用户空间模拟（Split IRQChip）这是古老、">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-03T09:11:19.952Z">
+<meta property="article:modified_time" content="2025-10-27T07:50:13.785Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -115,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/page/2/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/KVM学习笔记/KVM/kvm相关基本机制/APIC中断虚拟化/"/>
 
 
 
 
 
-  <title>Hexo</title>
+  <title> | Hexo</title>
   
 
 
@@ -140,8 +144,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -244,9 +247,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -259,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/APIC%E4%B8%AD%E6%96%AD%E8%99%9A%E6%8B%9F%E5%8C%96/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -276,9 +279,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" itemprop="url">Untitled</a></h1>
+          <h1 class="post-title" itemprop="name headline"></h1>
         
 
         <div class="post-meta">
@@ -331,163 +332,12 @@
 
                 
                 
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          
-首先在全局入口处的 kvm_init 对每个cpu都尝试获得了专属的变量地址
-
-1234567	    for_each_possible_cpu(cpu) &#123;        if (!alloc_cpumask_var_node(&amp;per_cpu(cpu_kick_mask, cpu),                        GFP_KERNEL, cpu_to_node(cpu))) &#123;            r = -ENOMEM;            goto err_cpu_kick_mask;        &#125;    &#125;	
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/" itemprop="url">Untitled</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
-                2025-11-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
                   , 
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM</span>
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
+                    <span itemprop="name">kvm相关基本机制</span>
                   </a>
                 </span>
 
@@ -504,6 +354,11 @@
           
           
 
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
           
 
           
@@ -523,25 +378,34 @@
       
 
       
-        
-          
-          如其他的ioctl一样，用户态程序调用：ioctl-&gt;sys_ioctl(系统调用层)-&gt;vfs_ioctl()（VFS层）-&gt;kvm_dev_ioctl()
-create_vm接下来对kvm_dev_ioctl()的注册的行为进行分析：
+        <h1 id="虚拟化的挑战："><a href="#虚拟化的挑战：" class="headerlink" title="虚拟化的挑战："></a>虚拟化的挑战：</h1><p>[[Linux中断处理]]guest操作系统不知道自己运行在虚拟机里。他会像在物理机上一样，频繁读写CR8来管理中断。在早期的虚拟化中，每一次对CR8的访问都会导致VM-Exit，CPU控制权交还给KVM，KVM再去模拟对vAPIC的访问。这个开销是极其巨大的。</p>
+<h1 id="KVM虚拟APIC的两种模式"><a href="#KVM虚拟APIC的两种模式" class="headerlink" title="KVM虚拟APIC的两种模式"></a>KVM虚拟APIC的两种模式</h1><p>KVM提供了两种APIC虚拟化</p>
+<h2 id="模式一：-用户空间模拟（Split-IRQChip）"><a href="#模式一：-用户空间模拟（Split-IRQChip）" class="headerlink" title="模式一： 用户空间模拟（Split IRQChip）"></a>模式一： 用户空间模拟（Split IRQChip）</h2><p>这是古老、慢但兼容性最好的模式。</p>
+<ul>
+<li>工作方式： KVM 内核模块只负责最基础的evCPU运行，而将整个APIC的模拟工作（LAPIC和IO-APIC）外包给用户空间的QEMU。</li>
+<li><strong><code>!lapic_in_kernel(vcpu)</code></strong>：这个表达式在这种模式下为 <strong><code>true</code></strong> (LAPIC <strong>不在</strong>内核里)。</li>
+<li>CR8 管理：<ol>
+<li>当 Guest 写入CR8， 触发VM-Exit。</li>
+<li>KVM捕获退出，但他自己不知道如何处理，所以将推出原因<code>KVM_EXIT_SET_CR8</code> 写入 <code>kvm_run</code> 共享页，然后返回到 QEMU。</li>
+<li>QEMU 检查 <code>kvm_run</code>，发现 Guest 要设置 CR8。QEMU 在自己的软件模拟 APIC 中更新这个值。</li>
+<li>QEMU 再次调用 <code>KVM_RUN</code>。在调用前，它会将这个新的 CR8 值写入 <code>kvm_run-&gt;cr8</code>。</li>
+<li>KVM准备再次运行vCPU，它看到了<code>!lapic_in_kernel(vcpu)</code>为true，于是它从 <code>kvm_run-&gt;cr8</code> 读出 QEMU 提供的“正确”值，并通过 <code>kvm_set_cr8()</code> 将其设置回 vCPU 的硬件上下文中。</li>
+</ol>
+</li>
+</ul>
+<h2 id="模式二：-内核-硬件加速（In-Kernel-LAPIC-APICv）"><a href="#模式二：-内核-硬件加速（In-Kernel-LAPIC-APICv）" class="headerlink" title="模式二： 内核&#x2F;硬件加速（In-Kernel LAPIC&#x2F;APICv）"></a>模式二： 内核&#x2F;硬件加速（In-Kernel LAPIC&#x2F;APICv）</h2><p>这是现代的、高性能的模式。它依赖于CPU硬件的虚拟化支持（intel APICv或AMD AVIC）。</p>
+<ul>
+<li><strong><code>!lapic_in_kernel(vcpu)</code></strong>：这个表达式在这种模式下为 <strong><code>false</code></strong> (LAPIC <strong>在</strong>内核里)。</li>
+<li>CR8管理：<ol>
+<li>CPU 硬件支持“<strong>TPR 影子</strong>”(TPR Shadowing)。</li>
+<li>当 Guest 写入 <code>CR8</code> 时，<strong>不再触发 VM-Exit</strong>。</li>
+<li>CPU 硬件会直接将这个值写入一个特殊的、由 KVM 控制的内存区域（VMCS 中的 “Virtual-APIC Page”）。</li>
+<li>硬件会<strong>自动</strong>使用这个“影子”值来屏蔽中断，整个过程 KVM 和 QEMU <strong>零参与、零开销</strong>。</li>
+<li><strong>这就是你的代码中 <code>if</code> 语句不执行的路径</strong>：因为 <code>!lapic_in_kernel</code> 为 <code>false</code>，KVM <strong>跳过</strong>了 <code>kvm_set_cr8()</code>。这是因为它知道 vCPU 的 CR8 状态已经由硬件自动维护了，绝对是最新的，根本不需要 QEMU 那个（可能已经过时的）值来同步。</li>
+</ol>
+</li>
+</ul>
 
-kvm_dev_ioctl_create_vm(unsigned long type)
-
-123fd = get_unused_fd_flags(O_CLOEXEC);    if (fd &lt; 0)        return fd;
-获取一个没有用过的fd。2. 接下来fd name传递给kvm_create_vm
-1struct
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
       
     </div>
     
@@ -558,179 +422,32 @@ kvm_dev_ioctl_create_vm(unsigned long type)
       
 
       
-
-      
-
       
       
-        <div class="post-eof"></div>
+
       
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url">Untitled</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
-                2025-11-03
-              </time>
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" rel="next" title="">
+                <i class="fa fa-chevron-left"></i> 
+              </a>
             
+          </div>
 
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
             
-
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/IRQ%20Window%20Exit/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
             
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
+          </div>
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          
-          kvm_enter_guest是一个很长的函数。还是一个有大量分发的函数。所以可以把该函数分为4阶段来进行分析：
-
-进入Guest前的最后准备
-进入Guest内部和退出循环
-退出Guest后的善后处理
-分发退出事件。
-
-而各个阶段之间的临界点就是如下代码块：
-12345678for (;;) &#123;	// ...	exit_fastpath = kvm_x86_call(vcpu_run)(vcpu,						   req_immediate_exit);	if (likely(exit_fastpath != EXIT_FASTPATH_REENTER_GUEST))		break;
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </div>
@@ -740,14 +457,11 @@ kvm_dev_ioctl_create_vm(unsigned long type)
   </article>
 
 
-    
-  </section>
 
-  
-  <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/">&lt;</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
-  </nav>
-
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -755,6 +469,10 @@ kvm_dev_ioctl_create_vm(unsigned long type)
 
 
           
+
+  
+
+
 
         </div>
         
@@ -775,8 +493,17 @@ kvm_dev_ioctl_create_vm(unsigned long type)
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -827,6 +554,22 @@ kvm_dev_ioctl_create_vm(unsigned long type)
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F%E5%8C%96%E7%9A%84%E6%8C%91%E6%88%98%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">虚拟化的挑战：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#KVM%E8%99%9A%E6%8B%9FAPIC%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">KVM虚拟APIC的两种模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%BC%8F%E4%B8%80%EF%BC%9A-%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4%E6%A8%A1%E6%8B%9F%EF%BC%88Split-IRQChip%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">模式一： 用户空间模拟（Split IRQChip）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%BC%8F%E4%BA%8C%EF%BC%9A-%E5%86%85%E6%A0%B8-%E7%A1%AC%E4%BB%B6%E5%8A%A0%E9%80%9F%EF%BC%88In-Kernel-LAPIC-APICv%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">模式二： 内核&#x2F;硬件加速（In-Kernel LAPIC&#x2F;APICv）</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -980,6 +723,10 @@ kvm_dev_ioctl_create_vm(unsigned long type)
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
