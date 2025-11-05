@@ -87,7 +87,7 @@
 <meta property="og:description" content="kvm_enter_guest是一个很长的函数。还是一个有大量分发的函数。所以可以把该函数分为4阶段来进行分析：  进入Guest前的最后准备 进入Guest内部和退出循环 退出Guest后的善后处理 分发退出事件。  而各个阶段之间的临界点就是如下代码块： 12345678for (;;) &#123;	&#x2F;&#x2F; ...	exit_fastpath &#x3D; kvm_x86_call(vcpu_run)(">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-03T09:11:19.945Z">
-<meta property="article:modified_time" content="2025-11-03T06:47:16.373Z">
+<meta property="article:modified_time" content="2025-11-04T03:01:20.570Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -417,7 +417,46 @@
 </ol>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">kvm_register_is_dirty</span>(vcpu, VCPU_REGS_RSP))</span><br><span class="line">        <span class="built_in">vmcs_writel</span>(GUEST_RSP, vcpu-&gt;arch.regs[VCPU_REGS_RSP]);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">kvm_register_is_dirty</span>(vcpu, VCPU_REGS_RIP))</span><br><span class="line">        <span class="built_in">vmcs_writel</span>(GUEST_RIP, vcpu-&gt;arch.regs[VCPU_REGS_RIP]);</span><br></pre></td></tr></table></figure>
 <p>用了脏位标志，很明显这个就是一种惰性同步。最后一刻将register的信息写入到VMCS上[[VMCS#Guest-State Area]]</p>
-<p>3. </p>
+<ol start="3">
+<li>同步Host状态</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> (<span class="built_in">kvm_register_is_dirty</span>(vcpu, VCPU_REGS_RSP))</span><br><span class="line">        <span class="built_in">vmcs_writel</span>(GUEST_RSP, vcpu-&gt;arch.regs[VCPU_REGS_RSP]);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">kvm_register_is_dirty</span>(vcpu, VCPU_REGS_RIP))</span><br><span class="line">        <span class="built_in">vmcs_writel</span>(GUEST_RIP, vcpu-&gt;arch.regs[VCPU_REGS_RIP]);</span><br><span class="line">    vcpu-&gt;arch.regs_dirty = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+<p>必须要在VMENTRY之前更新<strong>HOST</strong>的<code>CR3</code>。因为KVM（HOST内核）自己也可能被调度！</p>
+<p>否则可能发生反例：<br>例如：</p>
+<ul>
+<li>当vcpu_enter_guest做准备时，KMV线程呗宿主机调度器卡攻占了，切换到了另一个进程，另一进程有自己的CR3。</li>
+<li><ul>
+<li>那么一旦切换回KVM后。他可能在一个与之前不同的CR3上下文中运行（x86下的PCID变化）。</li>
+</ul>
+</li>
+<li>如果KVM没有重新读取当前的<code>CR3</code>并更新<code>HOST_CR3</code>字段，那么当VM-Exit发生时，PCU硬件会自动加载一个错误的<code>HOST_CR3</code>.</li>
+</ul>
+<ol start="4">
+<li>接下来开始正式调用</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* The actual VMENTER/EXIT is in the .noinstr.text section. */</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">vmx_vcpu_enter_exit</span>(vcpu, __vmx_vcpu_run_flags(vmx));</span><br></pre></td></tr></table></figure>
+<p>来进入VMENTER。<br>vmx_vcpu_enter_exit<code> 是一个**内联汇编**（</code>asm volatile<code>）函数。 [[vmx_vcpu_enter_exit]] 它会查看 </code>__vmx_vcpu_run_flags<code>的值（这个值是根据</code>vmx-&gt;loaded_vmcs-&gt;launched&#96; 标志位计算的）。</p>
+<ul>
+<li><strong>第一次运行</strong>：<code>launched = 0</code>，汇编执行 <strong><code>VMLAUNCH</code></strong>。</li>
+<li><strong>后续运行</strong>：<code>launched = 1</code>，汇编执行 <strong><code>VMRESUME</code></strong>。</li>
+</ul>
+<h1 id="VMEXIT后的处理"><a href="#VMEXIT后的处理" class="headerlink" title="VMEXIT后的处理"></a>VMEXIT后的处理</h1><ol>
+<li>恢复Host状态</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> (vcpu-&gt;arch.host_debugctl)</span><br><span class="line">        <span class="built_in">update_debugctlmsr</span>(vcpu-&gt;arch.host_debugctl);</span><br></pre></td></tr></table></figure>
+<p>退出了Guest后第一时间恢复Host状态。<br>2. 如果VMENTRY失败进行处理，否则设置相关标志位：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">unlikely</span>(vmx-&gt;exit_reason.failed_vmentry))</span><br><span class="line">	<span class="keyword">return</span> EXIT_FASTPATH_NONE;</span><br><span class="line"></span><br><span class="line">vmx-&gt;loaded_vmcs-&gt;launched = <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<p>launched标志位设置完成后，下一次KVM 再调用 <code>vmx_vcpu_run</code> 时，<code>__vmx_vcpu_run_flags</code> 就会告诉汇编代码去执行 <code>VMRESUME</code> 而不是 <code>VMLAUNCH</code>。<br>3. Fastpath处理</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">vmx_recover_nmi_blocking</span>(vmx);</span><br><span class="line"><span class="built_in">vmx_complete_interrupts</span>(vmx);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="built_in">vmx_exit_handlers_fastpath</span>(vcpu, force_immediate_exit);</span><br></pre></td></tr></table></figure>
+<p>在返回给<code>vmx_handle_exit</code>前，KVM会做最后一次检查来尝试：是否可以提前不退出KVM就<strong>处理VM-Exit</strong>。<br><code>vmx_exit_handlers_fastpath</code>是一个小型的switch，里面嵌套了更多层的快速处理路径</p>
+<ul>
+<li>对于嵌套虚拟化，除了处理某些VMX preemption timer退出可以处理，其余都是慢速路径   </li>
+<li>Guest试图写入一个MSR，调用嵌套的快速处理函数</li>
+<li>Guest OS（vCPU）执行了HLT指令，意味着Guest OS空闲了，此时会嵌套调用<code>handle_fastpath_hlt(vcpu)</code>，最后将vCPU的状态设置为<code>KVM_MP_STATE_HALTED</code>。<ul>
+<li>这个函数并不会返回<code>EXIT_FASTPATH_EXIT_USERSPACE</code>（退回到了QEMU）而是通知vcpu_run决定执行后，根据vCPU状态时HALTED而执行block操作，此时才是vCPU真正睡眠。</li>
+</ul>
+</li>
+</ul>
 
       
     </div>
@@ -527,7 +566,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -573,7 +612,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E9%98%B6%E6%AE%B5%EF%BC%88VM-Entry%E4%B9%8B%E5%89%8D%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">准备阶段（VM-Entry之前）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E%E5%87%86%E5%A4%87"><span class="nav-number">2.</span> <span class="nav-text">最后准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E5%85%A5%E8%BF%90%E8%A1%8CGuest"><span class="nav-number">3.</span> <span class="nav-text">进入运行Guest</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E9%98%B6%E6%AE%B5%EF%BC%88VM-Entry%E4%B9%8B%E5%89%8D%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">准备阶段（VM-Entry之前）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E%E5%87%86%E5%A4%87"><span class="nav-number">2.</span> <span class="nav-text">最后准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E5%85%A5%E8%BF%90%E8%A1%8CGuest"><span class="nav-number">3.</span> <span class="nav-text">进入运行Guest</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#VMEXIT%E5%90%8E%E7%9A%84%E5%A4%84%E7%90%86"><span class="nav-number">4.</span> <span class="nav-text">VMEXIT后的处理</span></a></li></ol></div>
             
 
           </div>

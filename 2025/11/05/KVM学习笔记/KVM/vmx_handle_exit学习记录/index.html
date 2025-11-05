@@ -79,15 +79,15 @@
 
 
 
-<meta name="description" content="APIC在现代x86-64架构中：APIC（高级可编程中断控制器）：  这是CPU内部用于管理中断的复杂组件。每个CPU核心都有一个本地APIC（LAPIC）。TPR（任务优先级寄存器）：  这是LAPIC内部的一个8位寄存器。它的作用是设置一个中断”屏蔽阈值“。只有优先级高于TPR值得硬件中断才会被CPU接受。CR8（控制寄存器8）： 在64位模式下，操作系统不能直接访问APIC得TPR寄存器。">
+<meta name="description" content="vmx_handle_exit的内部逻辑是__vmx_handle_exit。他是相当于一个总分发室。负责处理vmx-&gt;exit_reason  首先是进行PML缓冲区刷新 12	    if (enable_pml &amp;&amp; !is_guest_mode(vcpu))	        vmx_flush_pml_buffer(vcpu);  PML是Intel EPT里的一个硬">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86/index.html">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_handle_exit%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="APIC在现代x86-64架构中：APIC（高级可编程中断控制器）：  这是CPU内部用于管理中断的复杂组件。每个CPU核心都有一个本地APIC（LAPIC）。TPR（任务优先级寄存器）：  这是LAPIC内部的一个8位寄存器。它的作用是设置一个中断”屏蔽阈值“。只有优先级高于TPR值得硬件中断才会被CPU接受。CR8（控制寄存器8）： 在64位模式下，操作系统不能直接访问APIC得TPR寄存器。">
+<meta property="og:description" content="vmx_handle_exit的内部逻辑是__vmx_handle_exit。他是相当于一个总分发室。负责处理vmx-&gt;exit_reason  首先是进行PML缓冲区刷新 12	    if (enable_pml &amp;&amp; !is_guest_mode(vcpu))	        vmx_flush_pml_buffer(vcpu);  PML是Intel EPT里的一个硬">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2025-11-03T09:11:19.965Z">
-<meta property="article:modified_time" content="2025-10-28T03:23:13.676Z">
+<meta property="article:published_time" content="2025-11-05T03:18:56.441Z">
+<meta property="article:modified_time" content="2025-11-05T07:56:56.553Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -119,7 +119,7 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/KVM学习笔记/Linux内核基础/Linux中断处理/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/05/KVM学习笔记/KVM/vmx_handle_exit学习记录/"/>
 
 
 
@@ -262,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_handle_exit%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -291,8 +291,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
-                2025-11-03
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-05T11:18:56+08:00">
+                2025-11-05
               </time>
             
 
@@ -325,8 +325,8 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
-                    <span itemprop="name">Linux内核基础</span>
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
                   </a>
                 </span>
 
@@ -367,16 +367,45 @@
       
 
       
-        <h1 id="APIC"><a href="#APIC" class="headerlink" title="APIC"></a>APIC</h1><p>在现代x86-64架构中：<br><strong>APIC（高级可编程中断控制器）：</strong></p>
+        <p><code>vmx_handle_exit</code>的内部逻辑是<code>__vmx_handle_exit</code>。他是相当于一个总分发室。负责处理<code>vmx-&gt;exit_reason</code></p>
+<ol>
+<li>首先是进行PML缓冲区刷新 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">	    <span class="keyword">if</span> (enable_pml &amp;&amp; !<span class="built_in">is_guest_mode</span>(vcpu))</span><br><span class="line">	        <span class="built_in">vmx_flush_pml_buffer</span>(vcpu);</span><br></pre></td></tr></table></figure>
 <ul>
-<li>这是CPU内部用于管理中断的复杂组件。每个CPU核心都有一个本地APIC（LAPIC）。<br><strong>TPR（任务优先级寄存器）</strong>： </li>
-<li>这是LAPIC内部的一个8位寄存器。它的作用是设置一个中断”屏蔽阈值“。只有<strong>优先级高于TPR值得硬件中断才会被CPU接受</strong>。<br><strong>CR8（控制寄存器8）</strong>：</li>
-<li>在64位模式下，操作系统不能直接访问APIC得TPR寄存器。作为替代，CPU提供了<code>CR8</code>寄存器。<strong>对CR8得读写会被CPU自动转化为对LAPIC地TPR寄存器的读写</strong>。</li>
+<li><code>PML</code>是Intel EPT里的一个硬件功能，它能自动记录Guest到底写了那些内存页</li>
+<li>CPU会把这些脏页记录缓冲在自己内部，如果刚从Guest中退出，缓冲区里可能还有没同步到内存的数据。</li>
+<li>这个操作会让QEMU用户空间调用KVM_GET_DIRTY_LOG时，能够立即拿到新的脏页信息。[[脏页日志]]</li>
 </ul>
-<h1 id="NMI"><a href="#NMI" class="headerlink" title="NMI"></a>NMI</h1><ul>
-<li><strong>NMI (不可屏蔽中断)</strong>：这是一种最高优先级的硬件中断，比如硬件故障、调试器中断等。它<strong>不能</strong>被 Guest OS 用 <code>CLI</code> (Clear Interrupts) 指令屏蔽。</li>
+</li>
+<li>嵌套虚拟化处理 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">is_guest_mode</span>(vcpu))</span><br></pre></td></tr></table></figure>
+ 这一部分是检查是不是从L2 Guest中退出的（Guest运行的VM）<br> 如果是真，那么KVM处理的就是L2-&gt;L1的退出。<br> 解析来的处理主要是3件事：<ol>
+<li>强制标记VMCS脏页 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">nested_mark_vmcs12_pages_dirty</span>(vcpu);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>原因：L1会给KVM(L0)一些内存也的物理地址(例如虚拟APIC页，vmcs12)。CPU在运行L2时，可能会直接写入这些页.</li>
+<li>问题：这种硬件加速的写入会绕过KVM(L0)用来跟踪脏页的EPT写保护[[EPT]]</li>
+<li>方法：KVM(L0)只能通过L2退出时，强制地将全部的<del>内存页</del>元数据页标记为dirty，确保L1在获取L2的脏页信息不会出错。</li>
 </ul>
-<h2 id="NMI注入"><a href="#NMI注入" class="headerlink" title="NMI注入"></a>NMI注入</h2><p>当一个虚拟NMI需要被注入时（例如QEMU想要调试Guest），KVM不能立即注入。因为此时KVM可能会在vCPU处于一个不安全的状态（比如正在处理另一次VM-Exit）时受到这个NMI请求。<br>此时安全的做法是：先在 <code>vcpu-&gt;requests</code> 里做好标记（<code>KVM_REQ_NMI</code>）。等到<br><code>vcpu_enter_guest</code> 准备好时，再检查这个待注入的NMI事项，调用<code>process_nmi(vcpu)</code>，在 <strong>VM-Entry 的一瞬间</strong>安全、原子地将其注入 Guest。</p>
+</li>
+<li>当L2状态无效时，插入一个三重错误 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (vmx-&gt;emulation_required) &#123;</span><br><span class="line">	<span class="built_in">nested_vmx_vmexit</span>(vcpu, EXIT_REASON_TRIPLE_FAULT, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>emulation_required</code>标志位会告诉KVM（L0），L2 Guest现在的状态是无效的</li>
+<li>KVM(L0)无法运行L2.真实的CPU遇到无法恢复的错误时，会触发三重错误然后重启。KVM(L0)会模拟三重错误。</li>
+<li>L1会看到（虽然是L0的缘故）L2的虚拟机发生了三重错误，于是处理（重启）</li>
+<li><code>return 1</code>时返回给vcpu_run，意思是vcpu_run继续循环执行，不用退回到QEMU。</li>
+</ul>
+</li>
+<li>反射VM-Exit <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">nested_vmx_reflect_vmexit</span>(vcpu))</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>L2 Guest执行了<code>CPUID</code>指令</li>
+<li>KVM（L0）捕获了这个VM-Exit。</li>
+<li>KVM（L0）必须决定：这个<code>CPUID</code>退出，L1（Guest hypervisor）需不需要知道这个消息。</li>
+<li><code>nested_vmx_reflect_vmexit(vcpu)</code>会又条件的将这个VM-Exit反射给L1，并在为真时返回<code>true</code>，并告诉vcpu_run当前的错误已在内核处理，继续循环。</li>
+<li>结果：L1以为是L2 Guest触发了<code>CPUID</code>退出，然后L1就去模拟<code>CPUID</code>并恢复L2运行。</li>
+<li>值得注意的是， L1和L2都不会意识到L0做了处理。</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
 
       
     </div>
@@ -401,7 +430,7 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VMCS/" rel="next" title="">
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/" rel="next" title="">
                 <i class="fa fa-chevron-left"></i> 
               </a>
             
@@ -411,7 +440,7 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" rel="prev" title="">
+              <a href="/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/EPT/" rel="prev" title="">
                  <i class="fa fa-chevron-right"></i>
               </a>
             
@@ -465,17 +494,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            Overview
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -526,22 +546,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#APIC"><span class="nav-number">1.</span> <span class="nav-text">APIC</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NMI"><span class="nav-number">2.</span> <span class="nav-text">NMI</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#NMI%E6%B3%A8%E5%85%A5"><span class="nav-number">2.1.</span> <span class="nav-text">NMI注入</span></a></li></ol></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
