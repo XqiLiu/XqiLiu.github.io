@@ -363,11 +363,14 @@
       
         
           
-          特性位feature bitVIRTIO_NET_F_MQ代表Multi-Queue，多队列特性启用时，允许一个virtio-net的虚拟网卡（vNIC）向Guest OS暴露多个接收和发送队列。
+          
+title: virtio-net date: 2025-11-18 23:00 tags: [virtio, hypervisor] categories: VirtioIO
+
+特性位feature bitVIRTIO_NET_F_MQ代表Multi-Queue，多队列特性启用时，允许一个virtio-net的虚拟网卡（vNIC）向Guest OS暴露多个接收和发送队列。
 解决的问题：在此特性之前，一个虚拟网卡只能有一个接收队列和一个发送队列。当存在多个vCPU的虚拟机中会出现严重的性能瓶颈。
 
 单一的vCPU瓶颈：所有的网络数据包都必须由单个vCPU来处理。
-无法扩展：即使你给虚拟机分配了 8 个 vCPU，当网络I&#x2F;O非常高时（例如万兆网络），你可能会发现只有 1 个 vCPU 处于 100% 满载状态，而其他 7 个 vCPU 却很空闲。这导致虚拟机的
+无法扩展：即使你给虚拟机分配
           ...
           <!--noindex-->
           <div class="post-button text-center">
