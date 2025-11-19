@@ -81,13 +81,13 @@
 
 <meta name="description" content="IRQ Window Exit是Intel和AMD提供的硬件加速机制，为了解决如下问题： QEMU（模拟的设备，例如网卡）想要向vCPU注入一个设备中断（IRQ），但是vCPU（Guest OS）当前关闭了中断，那么KVM不能强行注入中断，因为会违反了OS的逻辑（真实的CPU也是这么做的），从而导致OS崩溃。 所以KVM必须也得等待Guest OS重新执行STI指令重新打开中断的那一刻，测可以安全">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="IRQ Window Exit">
 <meta property="og:url" content="https://xqiliu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/IRQ%20Window%20Exit/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="IRQ Window Exit是Intel和AMD提供的硬件加速机制，为了解决如下问题： QEMU（模拟的设备，例如网卡）想要向vCPU注入一个设备中断（IRQ），但是vCPU（Guest OS）当前关闭了中断，那么KVM不能强行注入中断，因为会违反了OS的逻辑（真实的CPU也是这么做的），从而导致OS崩溃。 所以KVM必须也得等待Guest OS重新执行STI指令重新打开中断的那一刻，测可以安全">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-03T09:11:19.955Z">
-<meta property="article:modified_time" content="2025-10-28T13:41:05.935Z">
+<meta property="article:modified_time" content="2025-11-19T07:42:02.225Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -125,7 +125,7 @@
 
 
 
-  <title> | Hexo</title>
+  <title>IRQ Window Exit | Hexo</title>
   
 
 
@@ -279,7 +279,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">IRQ Window Exit</h1>
         
 
         <div class="post-meta">
@@ -424,8 +424,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/APIC%E4%B8%AD%E6%96%AD%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="next" title="">
-                <i class="fa fa-chevron-left"></i> 
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/APIC%E4%B8%AD%E6%96%AD%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="next" title="APIC中断虚拟化">
+                <i class="fa fa-chevron-left"></i> APIC中断虚拟化
               </a>
             
           </div>
@@ -434,8 +434,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/KVM_RUN%E5%85%B1%E4%BA%AB%E9%A1%B5%EF%BC%88struct%20kvm_run%EF%BC%89/" rel="prev" title="">
-                 <i class="fa fa-chevron-right"></i>
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/KVM_RUN%E5%85%B1%E4%BA%AB%E9%A1%B5%EF%BC%88struct%20kvm_run%EF%BC%89/" rel="prev" title="KVM_RUN共享页（struct kvm_run">
+                KVM_RUN共享页（struct kvm_run <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>

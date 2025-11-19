@@ -81,13 +81,13 @@
 
 <meta name="description" content="同步机制SRCU机制 SRCU (Sleepable Read-Copy-Update) 是一种允许“读者”在读取共享数据时睡眠的 RCU 机制。 经典RCU(Read-Copy-Update)是一种为“读多写少”场景优化的同步机制。它的核心思想是：  读者（Reader）：读取数据时，几乎没有性能开销（不需要锁，甚至没有原子操作）。 写者（Updater）：更新数据时，它不直接修改，而是： C">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="SRCU">
 <meta property="og:url" content="https://xqiliu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/SRCU/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="同步机制SRCU机制 SRCU (Sleepable Read-Copy-Update) 是一种允许“读者”在读取共享数据时睡眠的 RCU 机制。 经典RCU(Read-Copy-Update)是一种为“读多写少”场景优化的同步机制。它的核心思想是：  读者（Reader）：读取数据时，几乎没有性能开销（不需要锁，甚至没有原子操作）。 写者（Updater）：更新数据时，它不直接修改，而是： C">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-03T09:11:19.971Z">
-<meta property="article:modified_time" content="2025-10-27T02:37:53.126Z">
+<meta property="article:modified_time" content="2025-11-19T07:41:18.813Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -125,7 +125,7 @@
 
 
 
-  <title> | Hexo</title>
+  <title>SRCU | Hexo</title>
   
 
 
@@ -279,7 +279,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">SRCU</h1>
         
 
         <div class="post-meta">
@@ -444,8 +444,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/" rel="prev" title="">
-                 <i class="fa fa-chevron-right"></i>
+              <a href="/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_handle_exit%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" rel="prev" title="vmx_handle_exit学习记录">
+                vmx_handle_exit学习记录 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>

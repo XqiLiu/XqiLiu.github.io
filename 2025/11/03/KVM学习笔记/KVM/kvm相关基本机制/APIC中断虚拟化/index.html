@@ -81,13 +81,13 @@
 
 <meta name="description" content="虚拟化的挑战：[[Linux中断处理]]guest操作系统不知道自己运行在虚拟机里。他会像在物理机上一样，频繁读写CR8来管理中断。在早期的虚拟化中，每一次对CR8的访问都会导致VM-Exit，CPU控制权交还给KVM，KVM再去模拟对vAPIC的访问。这个开销是极其巨大的。 KVM虚拟APIC的两种模式KVM提供了两种APIC虚拟化 模式一： 用户空间模拟（Split IRQChip）这是古老、">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="APIC中断虚拟化">
 <meta property="og:url" content="https://xqiliu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/APIC%E4%B8%AD%E6%96%AD%E8%99%9A%E6%8B%9F%E5%8C%96/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="虚拟化的挑战：[[Linux中断处理]]guest操作系统不知道自己运行在虚拟机里。他会像在物理机上一样，频繁读写CR8来管理中断。在早期的虚拟化中，每一次对CR8的访问都会导致VM-Exit，CPU控制权交还给KVM，KVM再去模拟对vAPIC的访问。这个开销是极其巨大的。 KVM虚拟APIC的两种模式KVM提供了两种APIC虚拟化 模式一： 用户空间模拟（Split IRQChip）这是古老、">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-03T09:11:19.952Z">
-<meta property="article:modified_time" content="2025-10-27T07:50:13.785Z">
+<meta property="article:modified_time" content="2025-11-19T07:41:54.209Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -125,7 +125,7 @@
 
 
 
-  <title> | Hexo</title>
+  <title>APIC中断虚拟化 | Hexo</title>
   
 
 
@@ -279,7 +279,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">APIC中断虚拟化</h1>
         
 
         <div class="post-meta">
@@ -429,8 +429,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" rel="next" title="">
-                <i class="fa fa-chevron-left"></i> 
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" rel="next" title="kvm_main.c学习记录">
+                <i class="fa fa-chevron-left"></i> kvm_main.c学习记录
               </a>
             
           </div>
@@ -439,8 +439,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/IRQ%20Window%20Exit/" rel="prev" title="">
-                 <i class="fa fa-chevron-right"></i>
+              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/IRQ%20Window%20Exit/" rel="prev" title="IRQ Window Exit">
+                IRQ Window Exit <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
