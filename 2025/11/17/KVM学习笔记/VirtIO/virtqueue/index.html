@@ -79,15 +79,15 @@
 
 
 
-<meta name="description" content="特性位feature bitVIRTIO_NET_F_MQ代表Multi-Queue，多队列特性启用时，允许一个virtio-net的虚拟网卡（vNIC）向Guest OS暴露多个接收和发送队列。 解决的问题：在此特性之前，一个虚拟网卡只能有一个接收队列和一个发送队列。当存在多个vCPU的虚拟机中会出现严重的性能瓶颈。  单一的vCPU瓶颈：所有的网络数据包都必须由单个vCPU来处理。 无法扩展：">
+<meta name="description" content="每个virtqueue由三个物理上连续的部分组成：  描述符表（Descriptor Table） 可用环（Available Ring） 已用环（Used Ring）  Descriptor Table描述符表是驱动程序用于设备的缓冲区。是一个大数组，数组里的每一项是struct virtq_desc。 123456789101112struct virtq_desc &#123; 	&#x2F;* Ad">
 <meta property="og:type" content="article">
-<meta property="og:title" content="virtio-net">
-<meta property="og:url" content="https://xqiliu.github.io/2025/11/18/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtioIO/virtio-net/index.html">
+<meta property="og:title" content="virtqueue">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/17/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="特性位feature bitVIRTIO_NET_F_MQ代表Multi-Queue，多队列特性启用时，允许一个virtio-net的虚拟网卡（vNIC）向Guest OS暴露多个接收和发送队列。 解决的问题：在此特性之前，一个虚拟网卡只能有一个接收队列和一个发送队列。当存在多个vCPU的虚拟机中会出现严重的性能瓶颈。  单一的vCPU瓶颈：所有的网络数据包都必须由单个vCPU来处理。 无法扩展：">
+<meta property="og:description" content="每个virtqueue由三个物理上连续的部分组成：  描述符表（Descriptor Table） 可用环（Available Ring） 已用环（Used Ring）  Descriptor Table描述符表是驱动程序用于设备的缓冲区。是一个大数组，数组里的每一项是struct virtq_desc。 123456789101112struct virtq_desc &#123; 	&#x2F;* Ad">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2025-11-18T12:10:43.999Z">
-<meta property="article:modified_time" content="2025-11-19T07:39:28.627Z">
+<meta property="article:published_time" content="2025-11-17T09:46:49.379Z">
+<meta property="article:modified_time" content="2025-11-19T07:54:34.226Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -119,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/18/KVM学习笔记/VirtioIO/virtio-net/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/17/KVM学习笔记/VirtIO/virtqueue/"/>
 
 
 
 
 
-  <title>virtio-net | Hexo</title>
+  <title>virtqueue | Hexo</title>
   
 
 
@@ -262,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/18/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtioIO/virtio-net/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/17/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -279,7 +279,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">virtio-net</h1>
+          <h1 class="post-title" itemprop="name headline">virtqueue</h1>
         
 
         <div class="post-meta">
@@ -291,8 +291,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-18T20:10:43+08:00">
-                2025-11-18
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-17T17:46:49+08:00">
+                2025-11-17
               </time>
             
 
@@ -314,19 +314,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtioIO/" itemprop="url" rel="index">
-                    <span itemprop="name">VirtioIO</span>
+                  <a href="/categories/VirtIO/" itemprop="url" rel="index">
+                    <span itemprop="name">VirtIO</span>
                   </a>
                 </span>
 
@@ -367,24 +356,46 @@
       
 
       
-        <h1 id="特性位feature-bit"><a href="#特性位feature-bit" class="headerlink" title="特性位feature bit"></a>特性位feature bit</h1><h2 id="VIRTIO-NET-F-MQ"><a href="#VIRTIO-NET-F-MQ" class="headerlink" title="VIRTIO_NET_F_MQ"></a>VIRTIO_NET_F_MQ</h2><p>代表Multi-Queue，多队列<br>特性启用时，允许一个virtio-net的虚拟网卡（vNIC）向Guest OS暴露多个接收和发送队列。</p>
-<p><strong>解决的问题：</strong><br>在此特性之前，一个虚拟网卡只能有一个接收队列和一个发送队列。<br>当存在多个vCPU的虚拟机中会出现严重的性能瓶颈。</p>
-<ul>
-<li><strong>单一的vCPU瓶颈</strong>：所有的网络数据包都必须由单个vCPU来处理。</li>
-<li><strong>无法扩展</strong>：即使你给虚拟机分配了 8 个 vCPU，当网络I&#x2F;O非常高时（例如万兆网络），你可能会发现只有 1 个 vCPU 处于 100% 满载状态，而其他 7 个 vCPU 却很空闲。这导致虚拟机的总网络吞吐量受限于单个 vCPU 的处理能力。</li>
-</ul>
-<p><strong>MQ如何工作的：</strong></p>
+        <p>每个virtqueue由三个物理上连续的部分组成：</p>
 <ol>
-<li>暴露多队列：虚拟网卡向虚拟机显示多个队列</li>
-<li>负载分散：Guest OS可以利用这些对俄，将网络处理的负载分散到多个vCPU上。<ul>
-<li>RX：类似于物理网卡的RSS技术，可以将不同的网络流哈希到不同的RX队列上，每个队列再由不同的vCPU处理。</li>
-<li>TX：布胡同的应用程序可以从不同的vCPU将数据包推送到不同的TX队列中，实现并行发送。</li>
+<li>描述符表（Descriptor Table）</li>
+<li>可用环（Available Ring）</li>
+<li>已用环（Used Ring）</li>
+</ol>
+<h2 id="Descriptor-Table"><a href="#Descriptor-Table" class="headerlink" title="Descriptor Table"></a>Descriptor Table</h2><p>描述符表是<strong>驱动程序</strong>用于设备的<strong>缓冲区</strong>。是一个大数组，数组里的每一项是<code>struct virtq_desc</code>。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">virtq_desc</span> &#123;</span> </span><br><span class="line">	<span class="comment">/* Address (guest-physical). */</span> </span><br><span class="line">	le64 addr; </span><br><span class="line">	<span class="comment">/* Length. */</span> </span><br><span class="line">	le32 len; </span><br><span class="line">	<span class="comment">/* This marks a buffer as continuing via the next field. */</span> </span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* The flags as indicated above. */</span> </span><br><span class="line">	le16 flags; </span><br><span class="line">	<span class="comment">/* Next field if flags &amp; NEXT */</span> </span><br><span class="line">	le16 next;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>addr</code>是一个物理地址，缓冲区可以通过next链接起来。每个描述符对应一个缓冲区，这个缓冲区只能是只读或只写的。但是描述符链可以有多个描述符。</li>
+<li><code>len</code>是缓冲区的长度</li>
+<li><code>flags</code><strong>非常重要</strong>，有两个关键标志位：<ul>
+<li><code>VIRTQ_DESC_F_NEXT</code> (1): 表示这个描述符“链接”到下一个描述符，形成一个“链”。 这就是实现<strong>分散-收集 (Scatter-Gather) I&#x2F;O</strong> 的方式（例如，一个网络包的“包头”和“包体”可以放在两个不同的缓冲区中，用这个标志链接起来）。</li>
+<li><code>VIRTQ_DESC_F_WRITE</code> (2): 表示这个缓冲区是“设备可写”的（如网卡<strong>接收</strong>缓冲区）。如果没设置，则缓冲区是“设备可读”的（如网卡<strong>发送</strong>缓冲区）。</li>
 </ul>
 </li>
-</ol>
-<p><strong>主要优势</strong>：</p>
+</ul>
+<h2 id="Available-Ring"><a href="#Available-Ring" class="headerlink" title="Available Ring"></a>Available Ring</h2><p>可用环是<strong>驱动</strong>用来为它的设备提供可用缓冲区（链）通知的。他的结构是这个样子的：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">virtq_avail</span> &#123;</span> </span><br><span class="line"><span class="meta">#<span class="keyword">define</span> VIRTQ_AVAIL_F_NO_INTERRUPT 1 </span></span><br><span class="line">	le16 flags; </span><br><span class="line">	le16 idx; </span><br><span class="line">	le16 ring[ <span class="comment">/* Queue Size */</span> ]; </span><br><span class="line">	le16 used_event; <span class="comment">/* Only if VIRTIO_F_EVENT_IDX */</span> </span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>这里的<code>idx</code>指示驱动程序将下一个描述符条目放在环中的位置，idx从0开始增长。<br>工作流程：</p>
 <ul>
-<li>提高吞吐量，降低延迟，提升CPU效率。</li>
+<li>驱动在“描述符表”里准备好一个描述符（或一个描述符链）。</li>
+<li>驱动把这个链的<strong>第一个描述符的索引 (id)</strong> 写入到 <code>avail-&gt;ring[]</code> 数组中。</li>
+<li>驱动更新 <code>avail-&gt;idx</code> 计数器，让设备可以看到这个新条目。<br>所有权：驱动写入，设备读取。<br><strong>中断抑制：</strong><br><code>used_event</code>可以提供一种不可靠的通知机制，来告知设备在驱动缓冲区时不希望中断（interrupt），但由于与设备不是同步的，所以不可靠，但可以作为一种有效的优化手段。</li>
+</ul>
+<h2 id="Used-Ring"><a href="#Used-Ring" class="headerlink" title="Used Ring"></a>Used Ring</h2><p>已用环是设备在使用完缓冲区后返回缓冲区（buffers）的地方，只能被设备写，被驱动读。设计结构如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">virtq_used</span> &#123;</span> </span><br><span class="line"><span class="meta">#<span class="keyword">define</span> VIRTQ_USED_F_NO_NOTIFY 1 </span></span><br><span class="line">	le16 flags; </span><br><span class="line">	le16 idx; </span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">virtq_used_elem</span> <span class="title">ring</span>[ /* <span class="title">Queue</span> <span class="title">Size</span> */];</span> </span><br><span class="line">	le16 avail_event; <span class="comment">/* Only if VIRTIO_F_EVENT_IDX */</span> </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>工作流程：</p>
+<ul>
+<li>设备处理完一个缓冲区</li>
+<li>设备把这个缓冲链的第一个描述符的索引（id）写入到used-&gt;ring[]数组中。</li>
+<li>设备同时会写入<code>len</code>，表示它往这个缓冲区里实际写了多少字节。</li>
+<li>设备更新used-&gt;idx计数器</li>
+<li>设备向驱动发送一个中断来通知驱动。</li>
+</ul>
+<p>所有权： 设备写入，驱动读取。<br>通知抑制：<br>可以在<code>used-&gt;flags</code>中设置<code>VIRTQ_USED_F_NO_NOTIFY</code>来告诉驱动，当完成缓冲区的使用不要<strong>Kick</strong>（notify）设备。</p>
+<h2 id="Interrupt-and-Notify"><a href="#Interrupt-and-Notify" class="headerlink" title="Interrupt and Notify"></a>Interrupt and Notify</h2><p>结合上述的中断移植：<strong>Interrupt</strong>是设备到驱动的打断，<strong>Notify</strong>是驱动到设备的打断。</p>
+<ul>
+<li>Notify是在驱动的<code>avail-&gt;idx</code>更新后，告知设备有新工作</li>
+<li>Interrupt是设备在<code>used-&gt;idx</code>更新后，通知去驱动回收缓冲区。<br>所以上述中两个动作都设置了抑制特性。<br><strong><code>VIRTIO_F_EVENT_IDX</code> (进阶)：</strong> 这是一个更高级的特性 ，它启用了 <code>avail_event</code> 和 <code>used_event</code> 字段 。这允许驱动说“<em>直到</em> <code>used-&gt;idx</code> 达到 100 时才中断我”，或者设备说“<em>直到</em> <code>avail-&gt;idx</code> 达到 50 时才踢我”。 这是现代 <code>vhost</code> 实现高性能的关键。</li>
 </ul>
 
       
@@ -410,8 +421,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2025/11/17/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtioIO/virtqueue/" rel="next" title="virtqueue">
-                <i class="fa fa-chevron-left"></i> virtqueue
+              <a href="/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/EPT/" rel="next" title="">
+                <i class="fa fa-chevron-left"></i> 
               </a>
             
           </div>
@@ -419,6 +430,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/18/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/" rel="prev" title="virtio-net">
+                virtio-net <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -541,7 +556,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%89%B9%E6%80%A7%E4%BD%8Dfeature-bit"><span class="nav-number">1.</span> <span class="nav-text">特性位feature bit</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#VIRTIO-NET-F-MQ"><span class="nav-number">1.1.</span> <span class="nav-text">VIRTIO_NET_F_MQ</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Descriptor-Table"><span class="nav-number">1.</span> <span class="nav-text">Descriptor Table</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Available-Ring"><span class="nav-number">2.</span> <span class="nav-text">Available Ring</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Used-Ring"><span class="nav-number">3.</span> <span class="nav-text">Used Ring</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Interrupt-and-Notify"><span class="nav-number">4.</span> <span class="nav-text">Interrupt and Notify</span></a></li></ol></div>
             
 
           </div>
