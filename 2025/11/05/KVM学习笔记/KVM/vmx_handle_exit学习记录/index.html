@@ -79,15 +79,15 @@
 
 
 
-<meta name="description" content="vmx_handle_exit的内部逻辑是__vmx_handle_exit。他是相当于一个总分发室。负责处理vmx-&gt;exit_reason  首先是进行PML缓冲区刷新 12	    if (enable_pml &amp;&amp; !is_guest_mode(vcpu))	        vmx_flush_pml_buffer(vcpu);  PML是Intel EPT里的一个硬">
+<meta name="description" content="vmx_handle_exit的内部逻辑是__vmx_handle_exit。他是相当于一个总分发室。负责处理vmx-&gt;exit_reason 进行PML缓冲区刷新12if (enable_pml &amp;&amp; !is_guest_mode(vcpu))	vmx_flush_pml_buffer(vcpu);  PML是Intel EPT里的一个硬件功能，它能自动记录Guest到底写">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
 <meta property="og:url" content="https://xqiliu.github.io/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_handle_exit%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="vmx_handle_exit的内部逻辑是__vmx_handle_exit。他是相当于一个总分发室。负责处理vmx-&gt;exit_reason  首先是进行PML缓冲区刷新 12	    if (enable_pml &amp;&amp; !is_guest_mode(vcpu))	        vmx_flush_pml_buffer(vcpu);  PML是Intel EPT里的一个硬">
+<meta property="og:description" content="vmx_handle_exit的内部逻辑是__vmx_handle_exit。他是相当于一个总分发室。负责处理vmx-&gt;exit_reason 进行PML缓冲区刷新12if (enable_pml &amp;&amp; !is_guest_mode(vcpu))	vmx_flush_pml_buffer(vcpu);  PML是Intel EPT里的一个硬件功能，它能自动记录Guest到底写">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-05T03:18:56.441Z">
-<meta property="article:modified_time" content="2025-11-05T07:56:56.553Z">
+<meta property="article:modified_time" content="2025-11-07T07:32:32.024Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -368,16 +368,15 @@
 
       
         <p><code>vmx_handle_exit</code>的内部逻辑是<code>__vmx_handle_exit</code>。他是相当于一个总分发室。负责处理<code>vmx-&gt;exit_reason</code></p>
-<ol>
-<li>首先是进行PML缓冲区刷新 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">	    <span class="keyword">if</span> (enable_pml &amp;&amp; !<span class="built_in">is_guest_mode</span>(vcpu))</span><br><span class="line">	        <span class="built_in">vmx_flush_pml_buffer</span>(vcpu);</span><br></pre></td></tr></table></figure>
+<h1 id="进行PML缓冲区刷新"><a href="#进行PML缓冲区刷新" class="headerlink" title="进行PML缓冲区刷新"></a>进行PML缓冲区刷新</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (enable_pml &amp;&amp; !<span class="built_in">is_guest_mode</span>(vcpu))</span><br><span class="line">	<span class="built_in">vmx_flush_pml_buffer</span>(vcpu);</span><br></pre></td></tr></table></figure>
 <ul>
 <li><code>PML</code>是Intel EPT里的一个硬件功能，它能自动记录Guest到底写了那些内存页</li>
 <li>CPU会把这些脏页记录缓冲在自己内部，如果刚从Guest中退出，缓冲区里可能还有没同步到内存的数据。</li>
-<li>这个操作会让QEMU用户空间调用KVM_GET_DIRTY_LOG时，能够立即拿到新的脏页信息。[[脏页日志]]</li>
+<li>这个操作会让QEMU用户空间调用KVM_GET_DIRTY_LOG时，能够立即拿到新的脏页信息。</li>
 </ul>
-</li>
-<li>嵌套虚拟化处理 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">is_guest_mode</span>(vcpu))</span><br></pre></td></tr></table></figure>
- 这一部分是检查是不是从L2 Guest中退出的（Guest运行的VM）<br> 如果是真，那么KVM处理的就是L2-&gt;L1的退出。<br> 解析来的处理主要是3件事：<ol>
+<h1 id="嵌套虚拟化处理"><a href="#嵌套虚拟化处理" class="headerlink" title="嵌套虚拟化处理"></a>嵌套虚拟化处理</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">is_guest_mode</span>(vcpu))</span><br></pre></td></tr></table></figure>
+<p>这一部分是检查是不是从L2 Guest中退出的（Guest运行的VM）<br>如果是真，那么KVM处理的就是L2-&gt;L1的退出。<br>解析来的处理主要是3件事：</p>
+<ol>
 <li>强制标记VMCS脏页 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">nested_mark_vmcs12_pages_dirty</span>(vcpu);</span><br></pre></td></tr></table></figure>
 <ul>
 <li>原因：L1会给KVM(L0)一些内存也的物理地址(例如虚拟APIC页，vmcs12)。CPU在运行L2时，可能会直接写入这些页.</li>
@@ -393,17 +392,35 @@
 <li><code>return 1</code>时返回给vcpu_run，意思是vcpu_run继续循环执行，不用退回到QEMU。</li>
 </ul>
 </li>
-<li>反射VM-Exit <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">nested_vmx_reflect_vmexit</span>(vcpu))</span><br><span class="line">            <span class="keyword">return</span> <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<li>反射VM-Exit <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">nested_vmx_reflect_vmexit</span>(vcpu))</span><br><span class="line">	<span class="keyword">return</span> <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
 <ul>
 <li>L2 Guest执行了<code>CPUID</code>指令</li>
 <li>KVM（L0）捕获了这个VM-Exit。</li>
 <li>KVM（L0）必须决定：这个<code>CPUID</code>退出，L1（Guest hypervisor）需不需要知道这个消息。</li>
 <li><code>nested_vmx_reflect_vmexit(vcpu)</code>会又条件的将这个VM-Exit反射给L1，并在为真时返回<code>true</code>，并告诉vcpu_run当前的错误已在内核处理，继续循环。</li>
 <li>结果：L1以为是L2 Guest触发了<code>CPUID</code>退出，然后L1就去模拟<code>CPUID</code>并恢复L2运行。</li>
-<li>值得注意的是， L1和L2都不会意识到L0做了处理。</li>
+<li>值得注意的是， L1和L2都不会意识到L0做了处理。[[VMCS#嵌套虚拟化下的VMCS]]</li>
 </ul>
 </li>
 </ol>
+<h1 id="错误情况处理"><a href="#错误情况处理" class="headerlink" title="错误情况处理"></a>错误情况处理</h1><p>在这里，返回值有两种情况：<br><code>return 0;</code>的含义就是慢速路径：KVM内核无法处理，或者严重错误，必须交由用户空间QEMU去处理。<br><code>return 1;</code>的含义就是快速路径：KVM内核自己处理完成，不需要返回QEMU。直接vcpu_run的通用循环快速继续。</p>
+<ol>
+<li><p>首先处理L1但硬件无法执行的情况，那么就采用软件模拟的方法来进行。</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (vmx-&gt;emulation_required)</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">handle_invalid_guest_state</span>(vcpu);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>慢速路径中最糟糕的例子：VMENTRY失败。</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (exit_reason.failed_vmentry) &#123;</span><br><span class="line">        <span class="built_in">dump_vmcs</span>(vcpu);</span><br><span class="line">        vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_FAIL_ENTRY;</span><br><span class="line">        vcpu-&gt;run-&gt;fail_entry.hardware_entry_failure_reason</span><br><span class="line">            = exit_reason.full;</span><br><span class="line">        vcpu-&gt;run-&gt;fail_entry.cpu = vcpu-&gt;arch.last_vmentry_cpu;</span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p> KVM在执行VMLAUNCCH，但是CPU硬件在LAUNCH前对KVM填写的VMCS罪行了最后一次预检发现了致命的配置错误后，触发该错误处理。</p>
+<ul>
+<li><code>dump_vmcs(vcpu)</code>这是用于将VMCS全部内容打印到内核日志</li>
+<li><code>vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_FAIL_ENTRY</code>这个数据结构复杂告知QEMU启动失败。</li>
+<li><code>vcpu-&gt;run-&gt;fail_entry.hardware_entry_failure_reason = exit_reason.full;</code>：把 CPU 硬件报告的“失败原因码”原封不动地发给 QEMU</li>
+<li>慢速路径返回</li>
+</ul>
+</li>
+<li><p>CPU执行VMLAUNCH时发生了失败</p>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">unlikely</span>(vmx-&gt;fail)) &#123;</span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line">	vcpu-&gt;run-&gt;fail_entry.hardware_entry_failure_reason</span><br><span class="line">	= <span class="built_in">vmcs_read32</span>(VM_INSTRUCTION_ERROR);</span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> <strong>注意区别！</strong> 这种失败的原因，CPU <strong>不会</strong>写在 <code>VM_EXIT_REASON</code> 里，而是写在一个<strong>专门的</strong>“指令错误”字段（<code>VM_INSTRUCTION_ERROR</code>）。KVM 从这个字段读取原因码，发给 QEMU。<br>4.接下来的代码描述了一种特殊情况的处理<br> <code>vectoring_info</code>是VMCS中的一个字段，如果<code>VALID_MASK</code> 位是 <code>1</code>，就意味着这次VM-Exit发生时，CPU正在尝试向Guest交付一个事件。<br> 接下来代码开始交代一系列处理的“白名单”，即KVM自己能处理的事件的名单进行排查。当白名单中没有当前的错误处理 。KVM将所有相关的报错调试信息进行打包返回。<br> 其实这个处理本质上是一个KVM开发者发现的无限循环的<strong>致命陷阱</strong>：<br> 这个无限循环本质上是由于<code>vectoring_info</code>是一个VMCS中VM-Exit信息区的一个字段。这个区域是硬件写入的，KVM只能读取。从而如果在KVM内部处理后，不能改变这个标志位，从而进入死循环，但更本质的讲：<br> <strong>KVM 可以模拟_架构_（Architecture）状态，但不能模拟_微架构_（Micro-architecture）状态。</strong><br> <strong>架构状态（KVM 可控）</strong>：<code>RAX</code> 寄存器、<code>CR3</code> 寄存器、<code>RIP</code> 指针、内存中的值。KVM 可以随意读写它们（通过 <code>vcpu-&gt;arch.regs</code> 或模拟指令），因为它们是被<strong>x86 架构明确定义</strong>的。<br> <strong>微架构状态（KVM 不可控）</strong>：CPU 内部的“中断交付管线”处于什么阶段、分支预测器里有什么数据、<code>L1</code> 缓存里有什么。这些是<strong>CPU 厂商的内部实现</strong>，没有暴露给 KVM 的清除接口。</p>
 </li>
 </ol>
 
@@ -440,7 +457,7 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/EPT/" rel="prev" title="">
+              <a href="/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/EPT/" rel="prev" title="">
                  <i class="fa fa-chevron-right"></i>
               </a>
             
@@ -494,8 +511,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -510,7 +536,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-count">18</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -521,7 +547,7 @@
               
               <div class="site-state-item site-state-categories">
                 
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">categories</span>
                 
               </div>
@@ -546,6 +572,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9B%E8%A1%8CPML%E7%BC%93%E5%86%B2%E5%8C%BA%E5%88%B7%E6%96%B0"><span class="nav-number">1.</span> <span class="nav-text">进行PML缓冲区刷新</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%E5%A4%84%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">嵌套虚拟化处理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E6%83%85%E5%86%B5%E5%A4%84%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">错误情况处理</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
