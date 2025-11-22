@@ -259,6 +259,515 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86/" itemprop="url">Linux中断处理</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux内核基础</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          APIC在现代x86-64架构中：APIC（高级可编程中断控制器）：
+
+这是CPU内部用于管理中断的复杂组件。每个CPU核心都有一个本地APIC（LAPIC）。TPR（任务优先级寄存器）： 
+这是LAPIC内部的一个8位寄存器。它的作用是设置一个中断”屏蔽阈值“。只有优先级高于TPR值得硬件中断才会被CPU接受。CR8（控制寄存器8）：
+在64位模式下，操作系统不能直接访问APIC得TPR寄存器。作为替代，CPU提供了CR8寄存器。对CR8得读写会被CPU自动转化为对LAPIC地TPR寄存器的读写。
+
+NMI
+NMI (不可屏蔽中断)：这是一种最高优先级的硬件中断，比如硬件故障、调试器中断等。
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VMCS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VMCS/" itemprop="url">VMCS</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
+                    <span itemprop="name">kvm相关基本机制</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          VMCS是用于intel硬件虚拟化(VT-x)的核心。这是一个硬件定义的、KVM必须在内存中创建和填充的内存数据结构，用于完整的封装和定义一个vCPU的所有状态和控制行为。对VMCS的写操作（VMWRITE操作）是一项高延迟的微码操作，远慢于常规的内存写入。
+CPU硬件通过VMPTRLD 指令将一个 VMCS 加载为“当前” VMCS。此后VMLAUNCH 和 VMRESUME 指令将完全依赖此 VMCS 中的信息来执行 VMENTRY；而 VMEXIT 发生时，CPU 硬件也会自动将退出信息写回此 VMCS。
+VMCS在功能上主要分为以下的几个区域：
+Guest-State Area(客户机
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VMCS/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VM-Exit/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VM-Exit/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
+                    <span itemprop="name">kvm相关基本机制</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          
+          
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VM-Exit/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/kvm%E4%BF%A1%E5%8F%B7%E4%B8%8E%E9%98%BB%E5%A1%9E%E6%9C%BA%E5%88%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1437,170 +1946,11 @@ kvm_dev_ioctl_create_vm(unsigned long type)
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2024/11/19/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2024/11/19/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/" itemprop="url">vmx_vcpu_enter_exit</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-11-19T15:39:00+08:00">
-                2024-11-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          
-          
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2024/11/19/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/">&lt;</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+    <a class="extend prev" rel="prev" href="/">&lt;</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">&gt;</a>
   </nav>
 
 
@@ -1646,7 +1996,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1657,12 +2007,21 @@ kvm_dev_ioctl_create_vm(unsigned long type)
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
             
 
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
             
 
           </nav>

@@ -79,15 +79,13 @@
 
 
 
-<meta name="description" content="特性位feature bitVIRTIO_NET_F_MQ代表Multi-Queue，多队列特性启用时，允许一个virtio-net的虚拟网卡（vNIC）向Guest OS暴露多个接收和发送队列。 解决的问题：在此特性之前，一个虚拟网卡只能有一个接收队列和一个发送队列。当存在多个vCPU的虚拟机中会出现严重的性能瓶颈。  单一的vCPU瓶颈：所有的网络数据包都必须由单个vCPU来处理。 无法扩展：">
 <meta property="og:type" content="article">
-<meta property="og:title" content="virtio-net">
-<meta property="og:url" content="https://xqiliu.github.io/2025/11/18/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/index.html">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="特性位feature bitVIRTIO_NET_F_MQ代表Multi-Queue，多队列特性启用时，允许一个virtio-net的虚拟网卡（vNIC）向Guest OS暴露多个接收和发送队列。 解决的问题：在此特性之前，一个虚拟网卡只能有一个接收队列和一个发送队列。当存在多个vCPU的虚拟机中会出现严重的性能瓶颈。  单一的vCPU瓶颈：所有的网络数据包都必须由单个vCPU来处理。 无法扩展：">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2025-11-18T12:10:43.999Z">
-<meta property="article:modified_time" content="2025-11-19T07:54:28.847Z">
+<meta property="article:published_time" content="2025-11-22T08:35:44.480Z">
+<meta property="article:modified_time" content="2025-11-22T08:35:44.480Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -119,13 +117,13 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/18/KVM学习笔记/VirtIO/virtio-net/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/22/KVM学习笔记/VirtIO/virtio-net/virtnet网络包发包/"/>
 
 
 
 
 
-  <title>virtio-net | Hexo</title>
+  <title> | Hexo</title>
   
 
 
@@ -262,7 +260,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/18/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -279,7 +277,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">virtio-net</h1>
+          <h1 class="post-title" itemprop="name headline"></h1>
         
 
         <div class="post-meta">
@@ -291,8 +289,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-18T20:10:43+08:00">
-                2025-11-18
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-22T16:35:44+08:00">
+                2025-11-22
               </time>
             
 
@@ -314,8 +312,30 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/VirtIO/" itemprop="url" rel="index">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/" itemprop="url" rel="index">
                     <span itemprop="name">VirtIO</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/" itemprop="url" rel="index">
+                    <span itemprop="name">virtio-net</span>
                   </a>
                 </span>
 
@@ -356,26 +376,7 @@
       
 
       
-        <h1 id="特性位feature-bit"><a href="#特性位feature-bit" class="headerlink" title="特性位feature bit"></a>特性位feature bit</h1><h2 id="VIRTIO-NET-F-MQ"><a href="#VIRTIO-NET-F-MQ" class="headerlink" title="VIRTIO_NET_F_MQ"></a>VIRTIO_NET_F_MQ</h2><p>代表Multi-Queue，多队列<br>特性启用时，允许一个virtio-net的虚拟网卡（vNIC）向Guest OS暴露多个接收和发送队列。</p>
-<p><strong>解决的问题：</strong><br>在此特性之前，一个虚拟网卡只能有一个接收队列和一个发送队列。<br>当存在多个vCPU的虚拟机中会出现严重的性能瓶颈。</p>
-<ul>
-<li><strong>单一的vCPU瓶颈</strong>：所有的网络数据包都必须由单个vCPU来处理。</li>
-<li><strong>无法扩展</strong>：即使你给虚拟机分配了 8 个 vCPU，当网络I&#x2F;O非常高时（例如万兆网络），你可能会发现只有 1 个 vCPU 处于 100% 满载状态，而其他 7 个 vCPU 却很空闲。这导致虚拟机的总网络吞吐量受限于单个 vCPU 的处理能力。</li>
-</ul>
-<p><strong>MQ如何工作的：</strong></p>
-<ol>
-<li>暴露多队列：虚拟网卡向虚拟机显示多个队列</li>
-<li>负载分散：Guest OS可以利用这些对俄，将网络处理的负载分散到多个vCPU上。<ul>
-<li>RX：类似于物理网卡的RSS技术，可以将不同的网络流哈希到不同的RX队列上，每个队列再由不同的vCPU处理。</li>
-<li>TX：布胡同的应用程序可以从不同的vCPU将数据包推送到不同的TX队列中，实现并行发送。</li>
-</ul>
-</li>
-</ol>
-<p><strong>主要优势</strong>：</p>
-<ul>
-<li>提高吞吐量，降低延迟，提升CPU效率。</li>
-</ul>
-
+        
       
     </div>
     
@@ -399,8 +400,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2025/11/17/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/" rel="next" title="virtqueue">
-                <i class="fa fa-chevron-left"></i> virtqueue
+              <a href="/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%9A%84%E9%A2%84%E5%85%88%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C/" rel="next" title="virtnet的预先准备工作">
+                <i class="fa fa-chevron-left"></i> virtnet的预先准备工作
               </a>
             
           </div>
@@ -459,17 +460,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            Overview
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -484,7 +476,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-count">21</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -495,12 +487,21 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
             
 
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">tags</span>
+                
+              </div>
             
 
           </nav>
@@ -520,22 +521,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%89%B9%E6%80%A7%E4%BD%8Dfeature-bit"><span class="nav-number">1.</span> <span class="nav-text">特性位feature bit</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#VIRTIO-NET-F-MQ"><span class="nav-number">1.1.</span> <span class="nav-text">VIRTIO_NET_F_MQ</span></a></li></ol></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
