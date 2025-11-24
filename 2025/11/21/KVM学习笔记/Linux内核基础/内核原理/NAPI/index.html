@@ -82,7 +82,7 @@
 <meta name="description" content="NAPI是Linux网络处理高吞吐量的核心机制。为了解决如下问题：每来一个网络包，网卡就触发一次CPU中断。 NAPI的解决方案是中断+轮询：  中断：当第一个包到来时，触发中断，通知CPU。 关闭终端：驱动程序立刻关闭该网卡的接收中断。 调度轮询：驱动指示内核加入到Poll List 轮询：内核在软中断阶段，调用驱动提供的virtnet_poll还敢书，来一次性取走若干包 恢复：队列空了，则重新">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://xqiliu.github.io/2025/11/21/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/NAPI/index.html">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/21/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/NAPI/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="NAPI是Linux网络处理高吞吐量的核心机制。为了解决如下问题：每来一个网络包，网卡就触发一次CPU中断。 NAPI的解决方案是中断+轮询：  中断：当第一个包到来时，触发中断，通知CPU。 关闭终端：驱动程序立刻关闭该网卡的接收中断。 调度轮询：驱动指示内核加入到Poll List 轮询：内核在软中断阶段，调用驱动提供的virtnet_poll还敢书，来一次性取走若干包 恢复：队列空了，则重新">
 <meta property="og:locale" content="en_US">
@@ -119,7 +119,7 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/21/KVM学习笔记/NAPI/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/21/KVM学习笔记/Linux内核基础/内核原理/NAPI/"/>
 
 
 
@@ -262,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/21/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/NAPI/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/21/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/NAPI/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -316,6 +316,28 @@
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
                     <span itemprop="name">KVM学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux内核基础</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/" itemprop="url" rel="index">
+                    <span itemprop="name">内核原理</span>
                   </a>
                 </span>
 
@@ -469,7 +491,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-count">23</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
