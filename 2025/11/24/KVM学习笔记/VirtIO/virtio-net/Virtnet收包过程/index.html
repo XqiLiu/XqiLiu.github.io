@@ -79,15 +79,15 @@
 
 
 
-<meta name="description" content="Guest的收包不同于发包过程。发包过程是Guest OS主动进行的。而收包过程则是Guest OS被动的，高度依赖NAPI [[NAPI]]">
+<meta name="description" content="Guest的收包不同于发包过程。发包过程是Guest OS主动进行的。而收包过程则是Guest OS被动的。 Refill收包过程中有一个比较反直觉的逻辑：虽然Guest是被动接收数据的，但是Guest必须提前准备好内存（buffer）  在数据层面：Host生产，Guest消费 在内存资源方面：Guest生产Buffer，Host消费Buffer。这个空闲缓冲区即   在virtnet打开的初始">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
 <meta property="og:url" content="https://xqiliu.github.io/2025/11/24/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/Virtnet%E6%94%B6%E5%8C%85%E8%BF%87%E7%A8%8B/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Guest的收包不同于发包过程。发包过程是Guest OS主动进行的。而收包过程则是Guest OS被动的，高度依赖NAPI [[NAPI]]">
+<meta property="og:description" content="Guest的收包不同于发包过程。发包过程是Guest OS主动进行的。而收包过程则是Guest OS被动的。 Refill收包过程中有一个比较反直觉的逻辑：虽然Guest是被动接收数据的，但是Guest必须提前准备好内存（buffer）  在数据层面：Host生产，Guest消费 在内存资源方面：Guest生产Buffer，Host消费Buffer。这个空闲缓冲区即   在virtnet打开的初始">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-24T07:09:30.360Z">
-<meta property="article:modified_time" content="2025-11-24T07:38:15.992Z">
+<meta property="article:modified_time" content="2025-11-25T04:03:05.163Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -378,7 +378,58 @@
       
 
       
-        <p>Guest的收包不同于发包过程。发包过程是Guest OS主动进行的。而收包过程则是Guest OS被动的，高度依赖NAPI [[NAPI]]</p>
+        <p>Guest的收包不同于发包过程。发包过程是Guest OS主动进行的。而收包过程则是Guest OS被动的。</p>
+<h1 id="Refill"><a href="#Refill" class="headerlink" title="Refill"></a>Refill</h1><p>收包过程中有一个比较反直觉的逻辑：<strong>虽然Guest是被动接收数据的，但是Guest必须提前准备好内存（buffer）</strong></p>
+<ul>
+<li>在数据层面：Host生产，Guest消费</li>
+<li>在内存资源方面：Guest生产Buffer，Host消费Buffer。<br>这个空闲缓冲区即</li>
+</ul>
+<ol>
+<li>在virtnet打开的初始阶段，就完成了这个空闲缓冲区的refill：</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">virtnet_open</span><span class="params">(<span class="keyword">struct</span> net_device *dev)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">//...</span></span><br><span class="line">	<span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; vi-&gt;max_queue_pairs; i++) &#123;</span><br><span class="line">		<span class="keyword">if</span> (i &lt; vi-&gt;curr_queue_pairs)</span><br><span class="line">			<span class="comment">/* Make sure we have some buffers: if oom use wq. */</span></span><br><span class="line">			<span class="keyword">if</span> (!try_fill_recv(vi, &amp;vi-&gt;rq[i], GFP_KERNEL))</span><br><span class="line">				schedule_delayed_work(&amp;vi-&gt;refill, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">		err = virtnet_enable_queue_pair(vi, i);</span><br><span class="line">	&#125;</span><br><span class="line"><span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的<code>max_queue_pairs</code>代表着有多少队收包&#x2F;发包的队列，即多少对virtqueue。这里的<code>refill</code>意味着循环地把每一个receive_queue（一个virtqueue）里的每一项desc对应的物理地址都填充好。这里的内存<strong>不能是延迟分配</strong>的，如果网络包到了再进行临时分配，网络数据不允许这么高的延迟，会产生丢包。<br>这里分配的内存数据也是分散的，不必申请一整块的连续内存。毕竟每一个desc中的物理地址指向的是一块较小的内存块。</p>
+<ol start="2">
+<li>在网络每次完成了收包的过程之后，都需要检验一下剩余的空闲缓冲区是否充足，如果空了一半，则立即触发<code>Refill</code></li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">virtnet_receive</span><span class="params">(<span class="keyword">struct</span> receive_queue *rq, <span class="type">int</span> budget,</span></span><br><span class="line"><span class="params">			   <span class="type">unsigned</span> <span class="type">int</span> *xdp_xmit)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span> (rq-&gt;vq-&gt;num_free &gt; min((<span class="type">unsigned</span> <span class="type">int</span>)budget, virtqueue_get_vring_size(rq-&gt;vq)) / <span class="number">2</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!try_fill_recv(vi, rq, GFP_ATOMIC)) &#123;</span><br><span class="line">			spin_lock(&amp;vi-&gt;refill_lock);</span><br><span class="line">			<span class="keyword">if</span> (vi-&gt;refill_enabled)</span><br><span class="line">				schedule_delayed_work(&amp;vi-&gt;refill, <span class="number">0</span>);</span><br><span class="line">			spin_unlock(&amp;vi-&gt;refill_lock);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>关键动作：</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">bool</span> <span class="title function_">try_fill_recv</span><span class="params">(<span class="keyword">struct</span> virtnet_info *vi, <span class="keyword">struct</span> receive_queue *rq,</span></span><br><span class="line"><span class="params">			  <span class="type">gfp_t</span> gfp)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> err;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (rq-&gt;xsk_pool) &#123;</span><br><span class="line">		err = virtnet_add_recvbuf_xsk(vi, rq, rq-&gt;xsk_pool, gfp);</span><br><span class="line">		<span class="keyword">goto</span> kick;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">do</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> (vi-&gt;mergeable_rx_bufs)</span><br><span class="line">			err = add_recvbuf_mergeable(vi, rq, gfp);</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> (vi-&gt;big_packets)</span><br><span class="line">			err = add_recvbuf_big(vi, rq, gfp);</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">			err = add_recvbuf_small(vi, rq, gfp);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (err)</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">	&#125; <span class="keyword">while</span> (rq-&gt;vq-&gt;num_free);</span><br><span class="line"></span><br><span class="line">kick:</span><br><span class="line">	<span class="keyword">if</span> (virtqueue_kick_prepare(rq-&gt;vq) &amp;&amp; virtqueue_notify(rq-&gt;vq)) &#123;</span><br><span class="line">		<span class="type">unsigned</span> <span class="type">long</span> flags;</span><br><span class="line"></span><br><span class="line">		flags = u64_stats_update_begin_irqsave(&amp;rq-&gt;stats.syncp);</span><br><span class="line">		u64_stats_inc(&amp;rq-&gt;stats.kicks);</span><br><span class="line">		u64_stats_update_end_irqrestore(&amp;rq-&gt;stats.syncp, flags);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> err != -ENOMEM;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>buffer有不同的类型，包括：</p>
+<ul>
+<li>mergeable，现代性能最高的一种，在下文详细展开讲解[[Virtnet收包过程#Mergable RX Buffers]]</li>
+<li>big，较为传统的buffer类型，缺点是不灵活，有时候很小的skb也要深情固定的较大的buffer</li>
+<li>small，现代Virtio中，专门处理的是能塞进一个page的skb</li>
+</ul>
+<p>总之，申请buffer的流程可以简单都归类为：<br>	申请Page-&gt;<code>sg_init_one</code>-&gt;<code>virqueue_add_inbuf</code>-&gt;Kick Host。</p>
+<h1 id="NAPI机制与中断抑制"><a href="#NAPI机制与中断抑制" class="headerlink" title="NAPI机制与中断抑制"></a>NAPI机制与中断抑制</h1><p>如果每次收到一个包，都触发一次中断，CPU则会因为上下文切换和VM-Exit而浪费带昂性能。<br>这里有一点需要注意，收包和发包都是需要使用NAPI的。其实本质上是因为<br>发送包时，需要解决回收垃圾消息的批量处理；<br>收包时，需要解决的是网络数据的批量处理。<br>状态机可以总结为：</p>
+<p>![[NAPI执行流程.png]]</p>
+<p>NAPI解决了包数量带来的中断风暴，而不是包大小问题。</p>
+<h1 id="Mergable-RX-Buffers"><a href="#Mergable-RX-Buffers" class="headerlink" title="Mergable RX Buffers"></a>Mergable RX Buffers</h1><p>这个就是上文提到buffer类型。<br>Mergable主要是为了解决高效接收大包的问题。</p>
+<ul>
+<li>lagacy Big：预先分配64KB连续内存</li>
+<li>Modern Mergeable：按需分配4KB小页。<br>在receive_mergeable中的代码。核心逻辑是：</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (--num_buf) &#123;</span><br><span class="line">		buf = virtnet_rq_get_buf(rq, &amp;len, &amp;ctx);</span><br><span class="line">		</span><br><span class="line">		u64_stats_add(&amp;stats-&gt;bytes, len);</span><br><span class="line">		page = virt_to_head_page(buf);</span><br><span class="line"></span><br><span class="line">		truesize = mergeable_ctx_to_truesize(ctx);</span><br><span class="line">		headroom = mergeable_ctx_to_headroom(ctx);</span><br><span class="line">		tailroom = headroom ? <span class="keyword">sizeof</span>(<span class="keyword">struct</span> skb_shared_info) : <span class="number">0</span>;</span><br><span class="line">		room = SKB_DATA_ALIGN(headroom + tailroom);</span><br><span class="line">		curr_skb  = virtnet_skb_append_frag(head_skb, curr_skb, page,</span><br><span class="line">						    buf, len, truesize);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>通过这个循环，把分散的Page挂到skb的碎片链表（Frags）上。<br>Mergebale不会增加终端频率，Host填满一个逻辑包才发送一次中断。开销只是微小的CPU拼装成本来换取高效的内存灵活性。</p>
+<h1 id="Event-Index"><a href="#Event-Index" class="headerlink" title="Event Index"></a>Event Index</h1><p>为了解决NAPI退出（重新开启中断）的一瞬间，存在竞态条件。如果简单的全开&#x2F;全关中断，则会有性能损耗。<br>所以提出这一机制：<br>Guest通知Host ：<code>avail_event = last_used_idx</code>。<br>制定了一个门槛，通知事件累计到了一定数量才会通知。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>从Guest视角来看，收包过程可以总结如下：</p>
+<ol>
+<li>Guest预先通过try_fill_revc将空Page的物理地址交给Host（Avail Ring）。</li>
+<li>Host写入数据，更新Used Ring，触发中断。</li>
+<li>Guest NAPI被唤醒， 调用<code>virtnet_poll</code></li>
+<li><code>virtqueue_get_buf</code>取回Page， <code>receive_mergeable</code> 组装成skb。</li>
+<li><code>netif_receive_skb</code>上交协议栈</li>
+<li>发现Ring即将空了，再次<code>try_fill_recv</code>补充Page。</li>
+</ol>
+<p>这其中有几个小问题可以作为补充：</p>
+<ol>
+<li>在所有的<code>receive_small</code>的内部的开始，都是XDP的代码。这是因为性能优化必须在skb分配之前进行拦截。</li>
+<li>在收包函数<code>virtnet_poll</code>中会调用<code>virtnet_poll_cleantx</code>（清理发包队列），这是一种顺便的优化，利用了CPU缓存热度，防止TX队列没人回收。</li>
+<li>Host 处理完数据后，Guest 是怎么找回当初那个 <code>skb</code> 或 <code>page</code> 的？答案就是通过ID查找<code>desc_state</code> 数组。这就是<strong>驱动上下文保存</strong>的作用。</li>
+</ol>
 
       
     </div>
@@ -467,8 +518,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -483,7 +543,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-count">24</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -528,6 +588,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Refill"><span class="nav-number">1.</span> <span class="nav-text">Refill</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NAPI%E6%9C%BA%E5%88%B6%E4%B8%8E%E4%B8%AD%E6%96%AD%E6%8A%91%E5%88%B6"><span class="nav-number">2.</span> <span class="nav-text">NAPI机制与中断抑制</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Mergable-RX-Buffers"><span class="nav-number">3.</span> <span class="nav-text">Mergable RX Buffers</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Event-Index"><span class="nav-number">4.</span> <span class="nav-text">Event Index</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

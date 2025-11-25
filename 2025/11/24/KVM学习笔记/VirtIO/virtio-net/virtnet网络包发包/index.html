@@ -87,7 +87,7 @@
 <meta property="og:description" content="这一部分总的来讲，我们最好带着一个问题来分析研究： Guest 里的 virtio-net 驱动是如何把一个 sk_buff (Linux 的网络包) 拆解，并“挂”到 virtqueue 上的？ 我们通过注册在netdev_ops 12345678dev-&gt;netdev_ops &#x3D; &amp;virtnet_netdev;static const struct net_device_ops">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-24T07:10:00.000Z">
-<meta property="article:modified_time" content="2025-11-24T07:10:35.599Z">
+<meta property="article:modified_time" content="2025-11-24T12:34:38.086Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="net">
 <meta property="article:tag" content="virtio">
@@ -373,7 +373,7 @@
 <p>我们通过注册在<code>netdev_ops</code></p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">dev-&gt;netdev_ops = &amp;virtnet_netdev;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">net_device_ops</span> <span class="title">virtnet_netdev</span> =</span> &#123;</span><br><span class="line">    .ndo_open      = virtnet_open,</span><br><span class="line">    .ndo_stop      = virtnet_close,</span><br><span class="line">    .ndo_start_xmit = start_xmit,  <span class="comment">// &lt;--- 就是它！</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 <p>中的<code>start_xmit</code>函数来开始追踪一次网络发包流程。</p>
-<p>这里的重要的结构体<code>sk_buff *skb</code> [[virtnet中重要的结构体#sk_buff]] 代表了一个网络包，此时这个包还处于Guest的内存里（毕竟我们目前是virtnet中）。</p>
+<p>这里的重要的结构体<code>sk_buff *skb</code> [[virtnet中重要的结构体#sk_buff]] 代表了一个网络包，此时这个包还处于Guest的内存里（毕竟我们目前是处于virtnet中）。</p>
 <p>代码的开始</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">netdev_tx_t</span> <span class="title function_">start_xmit</span><span class="params">(<span class="keyword">struct</span> sk_buff *skb, <span class="keyword">struct</span> net_device *dev)</span> &#123;</span><br><span class="line">	<span class="type">int</span> qnum = skb_get_queue_mapping(skb);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>此时的qnum就是内核根据包的特性，选择包走哪一个sq(send queue)。</p>
@@ -521,6 +521,10 @@
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2025/11/24/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/XDP/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -596,7 +600,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-count">24</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

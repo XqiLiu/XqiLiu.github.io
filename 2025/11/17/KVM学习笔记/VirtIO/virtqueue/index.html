@@ -87,7 +87,7 @@
 <meta property="og:description" content="每个virtqueue由三个物理上连续的部分组成：  描述符表（Descriptor Table） 可用环（Available Ring） 已用环（Used Ring）  virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。是一个大数组，数组里的每一项是struct virtq_desc。 123456789101112struct virtq_desc &amp;#1">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-17T09:46:49.379Z">
-<meta property="article:modified_time" content="2025-11-23T07:48:13.062Z">
+<meta property="article:modified_time" content="2025-11-24T13:37:55.428Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -397,7 +397,23 @@
 <li>Notify是在驱动的<code>avail-&gt;idx</code>更新后，告知设备有新工作</li>
 <li>Interrupt是设备在<code>used-&gt;idx</code>更新后，通知去驱动回收缓冲区。<br>所以上述中两个动作都设置了抑制特性。<br><strong><code>VIRTIO_F_EVENT_IDX</code> (进阶)：</strong> 这是一个更高级的特性 ，它启用了 <code>avail_event</code> 和 <code>used_event</code> 字段 。这允许驱动说“<em>直到</em> <code>used-&gt;idx</code> 达到 100 时才中断我”，或者设备说“<em>直到</em> <code>avail-&gt;idx</code> 达到 50 时才踢我”。 这是现代 <code>vhost</code> 实现高性能的关键。</li>
 </ul>
-<h1 id="virtiov1-1"><a href="#virtiov1-1" class="headerlink" title="virtiov1.1"></a>virtiov1.1</h1>
+<h1 id="virtiov1-1"><a href="#virtiov1-1" class="headerlink" title="virtiov1.1"></a>virtiov1.1</h1><h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><ol>
+<li>avail ring是如何进行“所有权”转接给设备的。为什么不在avail ring中的内存，设备是无法读取的。<ul>
+<li><strong>所有权转移机制</strong>：<ul>
+<li>这是基于<strong>共享内存</strong>的软件协议。</li>
+<li>动作：<code>avail-&gt;idx++</code>（发布索引）。</li>
+<li>原理：<strong>发布即移交</strong>。驱动程序通过逻辑约束，保证发布后不再触碰该缓冲区，直到 Host 归还。</li>
+</ul>
+</li>
+<li><strong>实现方式</strong>：<ul>
+<li>全靠<strong>软件读写内存值</strong> + <strong>内存屏障（Memory Barrier）</strong>。</li>
+<li>内存屏障保证了“填好 Desc”发生在“发布 Avail Index”之前，确保 Host 看到索引时，数据已经是准备好的。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
       
     </div>
     
@@ -510,7 +526,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-count">24</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -565,7 +581,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#virtiov1-0"><span class="nav-number">1.</span> <span class="nav-text">virtiov1.0</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Descriptor-Table"><span class="nav-number">1.1.</span> <span class="nav-text">Descriptor Table</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Available-Ring"><span class="nav-number">1.2.</span> <span class="nav-text">Available Ring</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Used-Ring"><span class="nav-number">1.3.</span> <span class="nav-text">Used Ring</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Interrupt-and-Notify"><span class="nav-number">1.4.</span> <span class="nav-text">Interrupt and Notify</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#virtiov1-1"><span class="nav-number">2.</span> <span class="nav-text">virtiov1.1</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#virtiov1-0"><span class="nav-number">1.</span> <span class="nav-text">virtiov1.0</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Descriptor-Table"><span class="nav-number">1.1.</span> <span class="nav-text">Descriptor Table</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Available-Ring"><span class="nav-number">1.2.</span> <span class="nav-text">Available Ring</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Used-Ring"><span class="nav-number">1.3.</span> <span class="nav-text">Used Ring</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Interrupt-and-Notify"><span class="nav-number">1.4.</span> <span class="nav-text">Interrupt and Notify</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#virtiov1-1"><span class="nav-number">2.</span> <span class="nav-text">virtiov1.1</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">问题</span></a></li></ol></div>
             
 
           </div>
