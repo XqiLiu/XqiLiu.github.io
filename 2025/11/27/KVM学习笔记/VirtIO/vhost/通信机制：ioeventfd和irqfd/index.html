@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="virtio,VM-Exit," />
 
 
 
@@ -79,14 +79,18 @@
 
 
 
+<meta name="description" content="概述： Guest对Host的Kick：Guest发包了，写一个寄存器，触发VMExit，KVM捕捉到后，通过ioeventfd直接唤醒内核里的vhost线程。 Host-&gt;Guest的Call流程：vhost线程收包完成，通过irqfd注入一个中断给Guest。  Qemu 分配一个eventfd并将其注册到 vhost 和 KVM，以实现通知绕过。vhost 的 $pid 内核线程会轮询">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VM-Exit/index.html">
+<meta property="og:title" content="vhost的通信机制：ioeventfd和irqfd">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/27/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/%E9%80%9A%E4%BF%A1%E6%9C%BA%E5%88%B6%EF%BC%9Aioeventfd%E5%92%8Cirqfd/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="概述： Guest对Host的Kick：Guest发包了，写一个寄存器，触发VMExit，KVM捕捉到后，通过ioeventfd直接唤醒内核里的vhost线程。 Host-&gt;Guest的Call流程：vhost线程收包完成，通过irqfd注入一个中断给Guest。  Qemu 分配一个eventfd并将其注册到 vhost 和 KVM，以实现通知绕过。vhost 的 $pid 内核线程会轮询">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2025-11-03T09:11:19.959Z">
-<meta property="article:modified_time" content="2025-10-27T03:08:12.809Z">
+<meta property="article:published_time" content="2025-11-27T07:53:20.588Z">
+<meta property="article:modified_time" content="2025-11-27T08:03:58.821Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="VM-Exit">
+<meta property="article:tag" content="virtio">
 <meta name="twitter:card" content="summary">
 
 
@@ -117,13 +121,13 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/KVM学习笔记/KVM/kvm相关基本机制/VM-Exit/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/27/KVM学习笔记/VirtIO/vhost/通信机制：ioeventfd和irqfd/"/>
 
 
 
 
 
-  <title> | Hexo</title>
+  <title>vhost的通信机制：ioeventfd和irqfd | Hexo</title>
   
 
 
@@ -260,7 +264,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VM-Exit/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/27/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/%E9%80%9A%E4%BF%A1%E6%9C%BA%E5%88%B6%EF%BC%9Aioeventfd%E5%92%8Cirqfd/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -277,7 +281,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">vhost的通信机制：ioeventfd和irqfd</h1>
         
 
         <div class="post-meta">
@@ -289,8 +293,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
-                2025-11-03
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-27T15:53:20+08:00">
+                2025-11-27
               </time>
             
 
@@ -312,8 +316,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
+                  <a href="/categories/VirtIO/" itemprop="url" rel="index">
+                    <span itemprop="name">VirtIO</span>
                   </a>
                 </span>
 
@@ -323,19 +327,8 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
-                    <span itemprop="name">kvm相关基本机制</span>
+                  <a href="/categories/VirtIO/vhost/" itemprop="url" rel="index">
+                    <span itemprop="name">vhost</span>
                   </a>
                 </span>
 
@@ -376,7 +369,67 @@
       
 
       
-        
+        <h1 id="概述："><a href="#概述：" class="headerlink" title="概述："></a>概述：</h1><ul>
+<li>Guest对Host的Kick：Guest发包了，写一个寄存器，触发VMExit，KVM捕捉到后，通过<code>ioeventfd</code>直接唤醒内核里的vhost线程。</li>
+<li>Host-&gt;Guest的Call流程：vhost线程收包完成，通过<code>irqfd</code>注入一个中断给Guest。</li>
+</ul>
+<p>Qemu 分配一个<code>eventfd</code>并将其注册到 vhost 和 KVM，以实现通知绕过。vhost 的 $pid 内核线程会轮询该 <code>eventfd</code>，当客户机写入特定地址时，KVM 会向其中写入数据。此机制称为 <strong>ioeventfd</strong>。<br>这样，对特定客户机内存地址的简单读&#x2F;写操作无需经过耗时的 QEMU 进程唤醒，可以直接路由到 vhost 工作线程。此外，它还具有异步的优势，无需停止 vCPU（因此无需立即进行上下文切换）。</p>
+<p>另一方面，qemu 会分配另一个 <code>eventfd</code>，并将其注册到 KVM 和 vhost，以便直接注入 vCPU 中断。这种机制称为<strong>irqfd</strong>，<br>它允许宿主机中的任何进程通过写入该 <code>eventfd</code> 向虚拟机注入 vCPU 中断，并具有相同的优势（异步、无需立即切换上下文等）。</p>
+<h1 id="对比："><a href="#对比：" class="headerlink" title="对比："></a>对比：</h1><ul>
+<li><strong>ioeventfd</strong>可以看作是KVM在监听Guest写内存</li>
+<li><strong>irqfd</strong>则是KVM在通过另一个<code>eventfd</code>得知vhost或其他Host线程处理完数据后写<code>eventfd</code>时，主动查到对应中断绑定表，执行<strong>注入中断</strong>。[[注入中断]]</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>ioeventfd</th>
+<th>irqfd</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>方向</strong></td>
+<td><strong>Guest $\rightarrow$ Host</strong> (Kick)</td>
+<td>Host-&gt;Guest(interrupt)</td>
+</tr>
+<tr>
+<td><strong>目的</strong></td>
+<td>通知Host：“已有数据，去读取”</td>
+<td>通知Guest：“已有数据，去读取”或者“数据处理完了，回收内存”</td>
+</tr>
+<tr>
+<td><strong>触发者</strong></td>
+<td>Guest 写 <strong>PIO&#x2F;MMIO 内存地址</strong></td>
+<td>Host (vhost&#x2F;QEMU) 写 <strong>eventfd 文件</strong></td>
+</tr>
+<tr>
+<td><strong>KVM的行为</strong></td>
+<td>拦截 VM Exit $\rightarrow$ <strong>写 eventfd</strong> 唤醒 vhost</td>
+<td>监听 eventfd $\rightarrow$ 修改 VMCS <strong>注入中断</strong></td>
+</tr>
+<tr>
+<td><strong>底层核心</strong></td>
+<td><code>poll</code> &#x2F; <code>epoll</code> (等待事件)</td>
+<td><code>injection</code> (修改 CPU 执行流)</td>
+</tr>
+</tbody></table>
+<h1 id="问题："><a href="#问题：" class="headerlink" title="问题："></a>问题：</h1><p>vhost 既然在内核里，为什么不直接调用 KVM 的函数 <code>kvm_set_irq()</code> 注入中断呢？为什么要多绕一个 <code>eventfd</code>？</p>
+<p>原因有两个：</p>
+<ol>
+<li><p><strong>解耦与通用性：</strong> <code>irqfd</code> 提供了一个通用的<strong>文件接口</strong>。</p>
+<ul>
+<li><p>如果是 <strong>vhost</strong>（内核线程），它写文件。</p>
+</li>
+<li><p>如果是 <strong>QEMU</strong>（用户进程），它也可以写文件。</p>
+</li>
+<li><p>如果是 <strong>VFIO</strong>（直通设备驱动），它也可以写文件。 KVM 不需要知道谁在发中断，它只管守着这个文件描述符。这让架构非常灵活。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>异步与性能：</strong> 如果 vhost 直接调用 KVM 的函数，它可能需要获取复杂的锁（Lock），如果 vCPU 正在忙或者锁被占用，vhost 线程就会被卡住（Block）。 用 <code>irqfd</code> 的话，vhost 只需要 <code>write</code> 一下就跑，剩下的脏活累活（注入中断、等待锁、踢 vCPU）由 KVM 的工作线程异步去处理，<strong>vhost 的网络吞吐量就不会被阻塞。</strong></p>
+</li>
+</ol>
+
       
     </div>
     
@@ -391,6 +444,14 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/virtio/" rel="tag"># virtio</a>
+          
+            <a href="/tags/VM-Exit/" rel="tag"># VM-Exit</a>
+          
+        </div>
+      
 
       
       
@@ -400,7 +461,7 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/kvm%E4%BF%A1%E5%8F%B7%E4%B8%8E%E9%98%BB%E5%A1%9E%E6%9C%BA%E5%88%B6/" rel="next" title="">
+              <a href="/2025/11/27/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/%E6%B3%A8%E5%85%A5%E4%B8%AD%E6%96%AD/" rel="next" title="">
                 <i class="fa fa-chevron-left"></i> 
               </a>
             
@@ -409,10 +470,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VMCS/" rel="prev" title="VMCS">
-                VMCS <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -464,8 +521,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -525,6 +591,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">概述：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9%E6%AF%94%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">对比：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">问题：</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

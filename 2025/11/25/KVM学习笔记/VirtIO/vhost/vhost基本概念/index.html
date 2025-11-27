@@ -87,7 +87,7 @@
 <meta property="og:description" content="virtio-net可以认为是Virtio协议中的前端实现；vhost则是协议中的后端实现。vhost-net运行在Host端（无论是内核态还是用户态）。 vhost的核心价值在vhost之前，也是存在Virtio的后端设计的，即QEMU Virtio。  QEMU：数据包从Guest-&gt; KVM(trap)-&gt;QEMU（用户态）-&gt;写入Tap设备-&gt;内核。路径太长，上下文">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-25T07:52:45.297Z">
-<meta property="article:modified_time" content="2025-11-26T09:56:36.949Z">
+<meta property="article:modified_time" content="2025-11-27T08:02:11.322Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -388,12 +388,6 @@
 </ul>
 </li>
 </ul>
-<h1 id="通信机制Eventfd"><a href="#通信机制Eventfd" class="headerlink" title="通信机制Eventfd"></a>通信机制Eventfd</h1><ul>
-<li>Guest对Host的Kick：Guest发包了，写一个寄存器，触发VMExit，KVM捕捉到后，通过<code>ioeventfd</code>直接唤醒内核里的vhost线程。</li>
-<li>Host-&gt;Guest的Call流程：vhost线程收包完成，通过irqfd诸如一个中断给Guest。</li>
-</ul>
-<p>Qemu 分配一个eventfd并将其注册到 vhost 和 KVM，以实现通知绕过。vhost 的 $pid 内核线程会轮询该 eventfd，当客户机写入特定地址时，KVM 会向其中写入数据。此机制称为 ioeventfd。这样，对特定客户机内存地址的简单读&#x2F;写操作无需经过耗时的 QEMU 进程唤醒，可以直接路由到 vhost 工作线程。此外，它还具有异步的优势，无需停止 vCPU（因此无需立即进行上下文切换）。</p>
-<p>另一方面，qemu 会分配另一个 eventfd，并将其注册到 KVM 和 vhost，以便直接注入 vCPU 中断。这种机制称为irqfd，它允许宿主机中的任何进程通过写入该 eventfd 向虚拟机注入 vCPU 中断，并具有相同的优势（异步、无需立即切换上下文等）。</p>
 <h1 id="重要数据结构"><a href="#重要数据结构" class="headerlink" title="重要数据结构"></a>重要数据结构</h1><h2 id="struct-vhost-dev"><a href="#struct-vhost-dev" class="headerlink" title="struct vhost_dev"></a>struct vhost_dev</h2><p>vhost_dev是vhost设备的抽象。<br>需要关注内存映射表mem以及vq指针<code>vqs</code></p>
 <h2 id="vhost-virtqueue"><a href="#vhost-virtqueue" class="headerlink" title="vhost_virtqueue"></a>vhost_virtqueue</h2><p>这个是Vring在Host内核态的代表。<br>需要关注avail，uesd，desc三个指针</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">vring_desc_t</span> __user *desc;</span><br><span class="line"><span class="type">vring_avail_t</span> __user *avail;</span><br><span class="line"><span class="type">vring_used_t</span> __user *used;</span><br></pre></td></tr></table></figure>
@@ -432,8 +426,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/11/25/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/vhost.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" rel="prev" title="">
-                 <i class="fa fa-chevron-right"></i>
+              <a href="/2025/11/25/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/vhost.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" rel="prev" title="vhost.c学习记录">
+                vhost.c学习记录 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -511,7 +505,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -522,7 +516,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-count">14</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -566,7 +560,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#vhost%E7%9A%84%E6%A0%B8%E5%BF%83%E4%BB%B7%E5%80%BC"><span class="nav-number">1.</span> <span class="nav-text">vhost的核心价值</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%9A%E4%BF%A1%E6%9C%BA%E5%88%B6Eventfd"><span class="nav-number">2.</span> <span class="nav-text">通信机制Eventfd</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">重要数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#struct-vhost-dev"><span class="nav-number">3.1.</span> <span class="nav-text">struct vhost_dev</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#vhost-virtqueue"><span class="nav-number">3.2.</span> <span class="nav-text">vhost_virtqueue</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#vhost%E7%9A%84%E6%A0%B8%E5%BF%83%E4%BB%B7%E5%80%BC"><span class="nav-number">1.</span> <span class="nav-text">vhost的核心价值</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">重要数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#struct-vhost-dev"><span class="nav-number">2.1.</span> <span class="nav-text">struct vhost_dev</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#vhost-virtqueue"><span class="nav-number">2.2.</span> <span class="nav-text">vhost_virtqueue</span></a></li></ol></li></ol></div>
             
 
           </div>
