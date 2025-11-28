@@ -710,7 +710,8 @@ Qemu 分配一个eventfd并将其注册到 vhost 和 KVM，以实现通知绕过
       
         
           
-          IOMMU里的理解可以是“设备里的MMU”：
+          IOMMU是硬件组件，在Intel的芯片组里叫做VT-d（注意不是VT-x）
+IOMMU的理解可以是“设备里的MMU”：
 
 CPU里的MMU负责把CPU看见的虚拟地址翻译成RAM的物理地址
 设备的IOMMU是负责把设备（网卡，显卡）看见的IO虚拟地址（IOVA）翻译成RAM的物理地址。
@@ -719,10 +720,8 @@ CPU里的MMU负责把CPU看见的虚拟地址翻译成RAM的物理地址
 IOMMU的优点可以总结如下：
 
 保证了隔离性、安全性。它限制了设备之恶能访问属于它自己的那块内存。如有恶意的外设或者带BUG的驱动试图乱写，IOMMU可以拦截而保护内核和其他进程。
-Scatter-Gather，保证了碎片化的物理内存可以拼接为一段连续的虚拟空间地址提供给设备
-
-
-          
+Scatter-Gather，保证了碎片化的物理内存可以拼接为一段连续的虚拟空
+          ...
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2025/11/27/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/IOMMU/#more" rel="contents">
@@ -776,7 +775,7 @@ Scatter-Gather，保证了碎片化的物理内存可以拼接为一段连续的
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -795,7 +794,7 @@ Scatter-Gather，保证了碎片化的物理内存可以拼接为一段连续的
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/" itemprop="url">Untitled</a></h1>
         
 
         <div class="post-meta">
@@ -852,8 +851,8 @@ Scatter-Gather，保证了碎片化的物理内存可以拼接为一段连续的
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost/" itemprop="url" rel="index">
-                    <span itemprop="name">vhost</span>
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/" itemprop="url" rel="index">
+                    <span itemprop="name">vhost-user</span>
                   </a>
                 </span>
 
@@ -891,11 +890,16 @@ Scatter-Gather，保证了碎片化的物理内存可以拼接为一段连续的
       
         
           
-          
-          
+          阅读本文，需要已经初步掌握了KVM的基本工作方、virtnet的基本工作原理、vhost的基本工作原理.vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。为了了解其性能提升方法。这里可以按照性能优化路径先分解一下：
+性能优化迭代
+virtnet-QEMU模式：这是基本模拟的方式。路径最长，流程是：
+
+
+Guest -&gt; virtnet -&gt; VM-Exit -&gt; KVM（处理不了IO）-&gt; QMUE（用户态模拟）-&gt; Host Kernel(TAP) -&gt; send这一模式下，virtnet作为Virtio模型的前端，QEMU的软
+          ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/#more" rel="contents">
+            <a class="btn" href="/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>

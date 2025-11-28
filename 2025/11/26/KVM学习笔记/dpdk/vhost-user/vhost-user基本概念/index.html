@@ -79,13 +79,15 @@
 
 
 
+<meta name="description" content="阅读本文，需要已经初步掌握了KVM的基本工作方、virtnet的基本工作原理、vhost的基本工作原理.vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。为了了解其性能提升方法。这里可以按照性能优化路径先分解一下： 性能优化迭代 virtnet-QEMU模式：这是基本模拟的方式。路径最长，流程是：   Guest -&gt; virtnet -&gt; VM-Exit">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://xqiliu.github.io/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/index.html">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="阅读本文，需要已经初步掌握了KVM的基本工作方、virtnet的基本工作原理、vhost的基本工作原理.vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。为了了解其性能提升方法。这里可以按照性能优化路径先分解一下： 性能优化迭代 virtnet-QEMU模式：这是基本模拟的方式。路径最长，流程是：   Guest -&gt; virtnet -&gt; VM-Exit">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-26T08:09:38.766Z">
-<meta property="article:modified_time" content="2025-11-26T08:09:38.766Z">
+<meta property="article:modified_time" content="2025-11-27T14:20:09.883Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -117,7 +119,7 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/26/KVM学习笔记/dpdk/vhost/vhost-user基本概念/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/26/KVM学习笔记/dpdk/vhost-user/vhost-user基本概念/"/>
 
 
 
@@ -260,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/26/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -334,8 +336,8 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost/" itemprop="url" rel="index">
-                    <span itemprop="name">vhost</span>
+                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/" itemprop="url" rel="index">
+                    <span itemprop="name">vhost-user</span>
                   </a>
                 </span>
 
@@ -376,7 +378,32 @@
       
 
       
-        
+        <p>阅读本文，需要已经初步掌握了KVM的基本工作方、virtnet的基本工作原理、vhost的基本工作原理.<br>vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。<br>为了了解其性能提升方法。这里可以按照性能优化路径先分解一下：</p>
+<h1 id="性能优化迭代"><a href="#性能优化迭代" class="headerlink" title="性能优化迭代"></a>性能优化迭代</h1><ol>
+<li>virtnet-QEMU模式：<br>这是基本模拟的方式。路径最长，流程是：</li>
+</ol>
+<ul>
+<li>Guest -&gt; virtnet -&gt; VM-Exit -&gt; KVM（处理不了IO）-&gt; QMUE（用户态模拟）-&gt; Host Kernel(TAP) -&gt; send<br>这一模式下，virtnet作为Virtio模型的前端，QEMU的软件模拟作为了Virtio模型的后端。</li>
+</ul>
+<p>很明显这一流程上下文切换次数太多，数据拷贝次数太多。</p>
+<ol start="2">
+<li>vhost-net（内核卸载）模式：<br>这一模式做了优化，将QEMU作为Virtio后端的职责offload到了内核态的内核模块vhost。这里的工作模式是：</li>
+</ol>
+<ul>
+<li>Guest -&gt; virtnet -&gt; VM-Exit -&gt; KVM(发现寄存器绑定了ioeventfd，不用唤醒QEMU) -&gt; vhost-net -&gt; TAP</li>
+<li>Guest依然会触发VM-Exit，KVM依然会捕获它。但KVM只需要利用<code>ioeventfd</code>[[通信机制：ioeventfd和irqfd]]机制通知一下，就可以返回Guest了。</li>
+<li>真正搬运数据的是内核里的<code>vhost-$pid</code>线程，他绕过了QEMU用户态。<br>这就减少了一部分系统调用和对应的上下文开销。</li>
+</ul>
+<ol start="2">
+<li>vhost-user(OVS-DPDK)模式:<br>这一模式下利用DPDK进一步提升了性能。vhost-user是DPDK底层的一个用户态库。此时的工作模式变成了：</li>
+</ol>
+<ul>
+<li>Guest -&gt; virtnet -&gt; vhost-user -&gt; send</li>
+<li>可以发现，vhost-user完全不需要发送VM-Exit，完全不需要kick，更不用说需要切换到KVM了。</li>
+<li>这里的vhost-user会开启Polling模式，一直在监督读取vq，并在收到消息后第一时间立即发送，且发送消息<strong>不</strong>需要经过<strong>vhost内核模块</strong>，更重要的是绕过了<strong>整个Host Linux网络协议栈</strong>（没有sk_buff，没有iptables）。</li>
+</ul>
+<p>vhost-user之所以能够做到绕过vhost内核模块，原因在于QEMU的virtio设备模型进行了粘合。</p>
+
       
     </div>
     
@@ -464,8 +491,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -525,6 +561,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E8%BF%AD%E4%BB%A3"><span class="nav-number">1.</span> <span class="nav-text">性能优化迭代</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
