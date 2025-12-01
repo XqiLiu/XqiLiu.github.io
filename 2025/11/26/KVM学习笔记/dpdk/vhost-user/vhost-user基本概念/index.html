@@ -87,7 +87,7 @@
 <meta property="og:description" content="阅读本文，需要已经初步掌握了KVM的基本工作方、virtnet的基本工作原理、vhost的基本工作原理.vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。为了了解其性能提升方法。这里可以按照性能优化路径先分解一下： 性能优化迭代virtnet-QEMU模式：这是基本模拟的方式。路径最长，流程是：  Guest -&gt; virtnet -&gt; VM-Exit -&amp;">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-26T08:09:38.766Z">
-<meta property="article:modified_time" content="2025-11-28T08:40:28.491Z">
+<meta property="article:modified_time" content="2025-11-30T13:36:15.068Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -404,7 +404,27 @@
 <li>QEMU还需要处理一些发向vhost-user的control virtqueue请求，主要是类似于“修改MAC地址”等杂事。这些低频的指令依然是QEMU接收。但是如果有需要，QEMU会通过Unix Socket再转告给DPDK。</li>
 </ul>
 <p>当然，这里还有更复杂的第四种优化方法，也是最后介绍的一种路径：</p>
-<h2 id="virtio-pmd"><a href="#virtio-pmd" class="headerlink" title="virtio-pmd"></a>virtio-pmd</h2><p>在这一模式下，</p>
+<h2 id="virtio-pmd"><a href="#virtio-pmd" class="headerlink" title="virtio-pmd"></a>virtio-pmd</h2><p>在这一模式下，需要集成VFIO[[VFIO]]与IOMMU[[IOMMU]]来进行配合。<br>在Guest OS内。IOMMU也是物理的，所以有vIOMMU这一概念。<br>vIOMMU与DPDK的合作下，存在一个问题：<br>在虚拟机里的网卡驱动以为自己看到了真实的物理内存GPA，但其实那是宿主机的虚拟内存HVA。vIOMMU负责维护这层映射关系：IOVA-&gt;GPA-&gt;HPA。<br>所以vIOMMU有如下的特点：</p>
+<ul>
+<li>它将Guest的IOVA（I&#x2F;O虚拟地址）转化为GPA，就像IOMMU在HOST所做的一样。然后通过QEMU的内存管理系统将GPA转换为QEMU的HVA</li>
+<li>像IOMMU一样执行设备隔离。</li>
+<li>实现I&#x2F;O TLB API。以便可以从QEMU外部查询映射。</li>
+</ul>
+<p>同时注意到vIOMMU与任何的Guest的网络应用程序之间的集成通常通过VFIO驱动程序映射实现。正如前文所提到的。该驱动程序执行设备隔离，并自动地将IOVA到GPA地映射添加到IOMMU。<br>这里的行为解释也可以参考实验中：</p>
+<ul>
+<li>启动<code>testpmd</code>后，VFIO会使得vIOMMU把网卡的内存区域（IOVA）映射给这个DPDK应用程序，让网卡可以直接写进来（GPA）[[vhost-user实验]]</li>
+</ul>
+<p>值得注意的是：DPDK的<code>Hugepages</code>采用一个<strong>大</strong>（Hugepages）的<strong>静态内存池</strong>来存储数据包缓存和虚拟队列，因此对于地址翻译转换在使用动态映射时，性能损失大幅降低。</p>
+<p>这里引用redhat博客<br>	<a target="_blank" rel="noopener" href="https://www.redhat.com/en/blog/journey-vhost-users-realm">https://www.redhat.com/en/blog/journey-vhost-users-realm</a><br>中的图：<br>![[redhat增强架构.png]]<br>同时在这里引入对于博客讲解的内容的理解：</p>
+<ul>
+<li>GPA的空间是Guest所感知到的物理内存，其实是HVA。所以VQ内存区域被分配时，他最终还是会在Host的物理内存某处。</li>
+<li>当DPDK的Vring物理内存地址联系上了IOVA，必须将与其关联的Guest的地址GPA一起填入进vIOMMU的TLB表中。<br>  网卡 (设备)<br>    |<br>    | 发起访问: “我要读 IOVA 0x9999”<br>    v<br>  +————-+<br>  |   vIOMMU      | &lt;— 博客那句话就在描述这里的数据填充<br>  |————-|<br>  | TLB             |<br>  | 0x9999 —-&gt; |—- 翻译成功! —-&gt; 是 GPA 0x1000<br>  +————-+<br>    |<br>    | 访问实际位置<br>    v<br>  +———————–+<br>  | Guest 物理内存 (GPA)      |<br>  | 虚拟队列 (vring)           | &lt;— 数据在这里 (地址 0x1000)<br>  +———————–+</li>
+<li>QEMU的内存管理系统能够感知GPA在其进程的HVA中的位置，所以能够转化GPA-&gt;HVA（QEMU）</li>
+<li>vhost-user库尝试访问没有对应转换的IOVA时，会通过辅助unix套接字发送IOTLB未命中消息。</li>
+<li>IOTLB API 接收请求并查找地址，首先将 IOVA 转换为 GPA，最后将 GPA 转换为 HVA。然后，它通过主 Unix Socket将转换后的地址发送回 vhost-user 库。</li>
+<li>最后，vhost-user 库还需要进行最后一次转换。由于它将 qemu 的内存映射到了自己的内存中，因此它必须将 qemu 的 HVA 转换为自己的 HVA（两个进程的VA不一致），才能访问共享内存。</li>
+<li>这里的QEMU下有一个vhost-user模块，是负责转发Guest的控制需求，通过Unix Socket和DPDK App沟通。因为Guest只能知道QEMU模拟出来的设备，所以需要这样一个组件作为中间代理。它只负责控制面，不管数据。</li>
+</ul>
 
       
     </div>
@@ -439,8 +459,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/11/27/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/IOMMU/" rel="prev" title="">
-                 <i class="fa fa-chevron-right"></i>
+              <a href="/2025/11/27/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/IOMMU/" rel="prev" title="IOMMU">
+                IOMMU <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -518,7 +538,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-count">33</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -529,7 +549,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-count">16</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
