@@ -1040,8 +1040,11 @@ VFIO的核心工作是：
 向用户态暴露色背的寄存器和中断
 配置IOMMU：这是关键点。VFIO负责调用IOMMU的接口，建立DMA映射表，告诉IOMMU将对应的内存段提供给设备。[[IOMMU]]VFIO 严重依赖 IOMMU 来实现安全的用户态驱动。
 
+我们可以以接管网卡为例：
+什么是“接管网卡”：在普通的Linux系统中，网卡是归Kernel所有的。
 
-          
+内核驱动（ixgbe.ko）
+          ...
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2025/11/28/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/VFIO/#more" rel="contents">

@@ -87,7 +87,7 @@
 <meta property="og:description" content="VFIO是Linux内核中的一个驱动框架。他的目的是让用户态程序（QEMU、DPDK应用）能够安全地、直接地控制硬件设备。 在VFIO出现之前，我们通常使用UIO机制来完成，但VFIO是最现代化、最安全的方案。 VFIO的核心工作是：  向用户态暴露色背的寄存器和中断 配置IOMMU：这是关键点。VFIO负责调用IOMMU的接口，建立DMA映射表，告诉IOMMU将对应的内存段提供给设备。[[IOM">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-28T08:47:48.043Z">
-<meta property="article:modified_time" content="2025-11-28T13:28:07.999Z">
+<meta property="article:modified_time" content="2025-12-02T12:59:22.246Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -374,6 +374,31 @@
 <li>向用户态暴露色背的寄存器和中断</li>
 <li><strong>配置IOMMU</strong>：这是关键点。VFIO负责调用IOMMU的接口，建立DMA映射表，告诉IOMMU将对应的内存段提供给设备。[[IOMMU]]<br>VFIO 严重依赖 IOMMU 来实现安全的用户态驱动。</li>
 </ul>
+<p>我们可以以<strong>接管网卡</strong>为例：</p>
+<h1 id="什么是“接管网卡”："><a href="#什么是“接管网卡”：" class="headerlink" title="什么是“接管网卡”："></a>什么是“接管网卡”：</h1><p>在普通的Linux系统中，网卡是归Kernel所有的。</p>
+<ul>
+<li><strong>内核驱动</strong>（ixgbe.ko）：它占用了网卡的所有权。</li>
+<li><strong>用户程序</strong>：只能通过Socket接口请求内核帮忙收发包。用户程序绝对不允许直接读写网卡硬件寄存器，否则会触发Segfault崩溃。</li>
+</ul>
+<p><strong>UIO</strong>和<strong>VFIO</strong>的核心概念是“夺权”<br>这个时候可以采用如下的过程：</p>
+<ul>
+<li><strong>卸载内核驱动</strong>：先把ixgbe标准驱动卸载</li>
+<li><strong>绑定VFIO</strong>：把网卡绑定到vfio-pci的驱动上。</li>
+<li><strong>效果</strong>：网卡的硬件寄存器被映射到了用户态内存里。现在DPDK的代码可以通过读写某个内存地址，这就是在指挥网卡硬件了。</li>
+</ul>
+<h1 id="UIO和VFIO的区别："><a href="#UIO和VFIO的区别：" class="headerlink" title="UIO和VFIO的区别："></a>UIO和VFIO的区别：</h1><p>虽然二者实现的功能差不多，但是安全性不同：</p>
+<ul>
+<li><strong>UIO</strong>：裸奔，旧方法<ul>
+<li>直接把网卡寄存器暴露给用户，不支持IOMMU。如果程序写错了物理地址，让网卡乱写内存，可能会覆盖掉操作系统的关键数据。</li>
+</ul>
+</li>
+<li><strong>VFIO</strong>：现代做法，安全<ul>
+<li>它利用了CPU的硬件单元IOMMU(VT-d)。</li>
+<li><strong>优点</strong>：它不仅暴露了网卡寄存器，还保证了安全。确保网卡只能访问对应的内存。如果试图访问非法地址，会被IOMMU拦截。</li>
+<li>I<strong>OVA的关键</strong>：在VFIO模式下，IOVA表就是由VFIO负责在IOMMU里建立映射的。[[DPDK的内存管理：Mbuf和Mempool#特殊优化#DMA优化]]</li>
+</ul>
+</li>
+</ul>
 
       
     </div>
@@ -462,8 +487,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -523,6 +557,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E2%80%9C%E6%8E%A5%E7%AE%A1%E7%BD%91%E5%8D%A1%E2%80%9D%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">什么是“接管网卡”：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#UIO%E5%92%8CVFIO%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">UIO和VFIO的区别：</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
