@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="VMCS是用于intel硬件虚拟化(VT-x)的核心。 直观上的理解，可以认为每一个vCPU都有一个对应的内存数据结构，这是一个“任务交接单”。当Host（KVM）要把CPU的控制权交给Guest是，它会填写这张单子，然后执行VM Resume指令，CPU硬件读取这张单子，以此设定Guest的运行状态。 这是一个硬件定义的、KVM必须在内存中创建和填充的内存数据结构，用于完整的封装和定义一个vCP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="VMCS">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VMCS/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="VMCS是用于intel硬件虚拟化(VT-x)的核心。 直观上的理解，可以认为每一个vCPU都有一个对应的内存数据结构，这是一个“任务交接单”。当Host（KVM）要把CPU的控制权交给Guest是，它会填写这张单子，然后执行VM Resume指令，CPU硬件读取这张单子，以此设定Guest的运行状态。 这是一个硬件定义的、KVM必须在内存中创建和填充的内存数据结构，用于完整的封装和定义一个vCP">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-03T09:11:19.960Z">
+<meta property="article:modified_time" content="2025-11-27T07:30:30.167Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/学习笔记/KVM/kvm相关基本机制/VMCS/"/>
+
+
+
+
+
+  <title>VMCS | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VMCS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">VMCS</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
+                    <span itemprop="name">kvm相关基本机制</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>VMCS是用于intel硬件虚拟化(VT-x)的核心。</p>
+<p>直观上的理解，可以认为每一个vCPU都有一个对应的内存数据结构，这是一个“任务交接单”。当Host（KVM）要把CPU的控制权交给Guest是，它会填写这张单子，然后执行<code>VM Resume</code>指令，CPU硬件读取这张单子，以此设定Guest的运行状态。</p>
+<p>这是一个硬件定义的、KVM必须在内存中创建和填充的内存数据结构，用于完整的封装和定义一个vCPU的所有状态和控制行为。<br>对VMCS的写操作（<code>VMWRITE</code>操作）是一项高延迟的微码操作，远慢于常规的内存写入。</p>
+<p>CPU硬件通过<code>VMPTRLD</code> 指令将一个 VMCS 加载为“当前” VMCS。此后<code>VMLAUNCH</code> 和 <code>VMRESUME</code> 指令将<strong>完全依赖</strong>此 VMCS 中的信息来执行 VMENTRY；而 <code>VMEXIT</code> 发生时，CPU 硬件也会<strong>自动将</strong>退出信息写回此 VMCS。</p>
+<p>VMCS在功能上主要分为以下的几个区域：</p>
+<h1 id="Guest-State-Area-客户机状态区"><a href="#Guest-State-Area-客户机状态区" class="headerlink" title="Guest-State Area(客户机状态区)"></a>Guest-State Area(客户机状态区)</h1><ul>
+<li>用途：定义了<code>VMENTRY</code>时vCPU必须加载的上下文。</li>
+<li>字段示例：<code>GUEST_RIP</code>, <code>GUEST_RSP</code>, <code>GUEST_RFLAGS</code>, <code>GUEST_CR0</code>, <code>GUEST_CR3</code>, <code>GUEST_CR4</code>, <code>GUEST_ES_SELECTOR</code>， <code>GUEST_CS_SELECTOR</code>, <code>GUEST_IDTR_BASE</code> 等。</li>
+<li>与KVM的交互：vmx_cpu_run中脏位检查后VMWRITE的主要目标区域。[[kvm_enter_guest学习笔记#进入运行Guest]]</li>
+</ul>
+<h1 id="Host-State-Area-宿主机状态区"><a href="#Host-State-Area-宿主机状态区" class="headerlink" title="Host-State Area (宿主机状态区)"></a>Host-State Area (宿主机状态区)</h1><ul>
+<li>用途：定义了VMEXIT发生时，宿主机（KVM）将恢复执行的最小上下文。</li>
+<li>字段示例：<code>HOST_RIP</code> (VMEXIT 后的返回地址), <code>HOST_RSP</code> (KVM 的栈顶), <code>HOST_CR3</code> (KVM 的页表基址), <code>HOST_CS_SELECTOR</code> 等。</li>
+<li>与 KVM的交互：<code>vmx_vcpu_run</code> 中 <code>if (unlikely(cr3 != vmx-&gt;loaded_vmcs-&gt;host_state.cr3))</code> 这段代码，就是在 VMENTRY 前确保 VMCS 中的<strong>宿主机着陆页表 (<code>HOST_CR3</code>)</strong> 必须是<strong>最新</strong>的，以防止宿主机 KVM 线程在被调度后，因 <code>CR3</code>（和 PCID）变更而导致 VMEXIT 时“着陆”到错误的地址空间，引发宿主机崩溃。</li>
+</ul>
+<h1 id="VM-Execution-Control-Fields（执行控制区）"><a href="#VM-Execution-Control-Fields（执行控制区）" class="headerlink" title="VM-Execution Control Fields（执行控制区）"></a>VM-Execution Control Fields（执行控制区）</h1><p><strong>用途</strong>：一系列位掩码，用于精确控制哪些Guest操作不需要VM-Exit（硬件处理），哪些必须VM-EXit（KVM截获）。<br><strong>字段示例</strong>：<code>Pin-Based Controls</code> (NMI 退出), <code>Processor-Based Controls</code> (如 <code>CPUID_EXITING</code> 使 <code>CPUID</code> 指令退出, <code>INTERRUPT_WINDOW_EXITING</code> 即 <code>IRQ Window</code> 机制的硬件开关, <code>USE_IO_BITMAPS</code> 使能 I&#x2F;O 截获)。</p>
+<h1 id="嵌套虚拟化下的VMCS"><a href="#嵌套虚拟化下的VMCS" class="headerlink" title="嵌套虚拟化下的VMCS"></a>嵌套虚拟化下的VMCS</h1><p>物理CPU只认一个激活的VMCS，当启用了嵌套虚拟化时，VMCS的触发流程发生一些变化。<br>这个VMCS的触发设置流程如下：</p>
+<ol>
+<li>阶段一：L1准备启动L2<ol>
+<li>L1以为自己是物理机，在内存中准备了一块数据，它叫它为<code>vmcs01</code>（在L0看来是<code>vmcs12</code>，下面为了区分，统一在L0角度来称呼VMCS）</li>
+<li>L1在<code>vmcs12</code>（内存）里设置“<code>CPUID_EXITING = 1</code>”，这样L2执行<code>CPUID</code>时就会退出</li>
+<li>L1执行<code>VMLAUNCH</code>指令（以为它在启动自己的VM）</li>
+</ol>
+</li>
+<li>阶段二：<code>VMLAUNCH</code>陷阱（L1-&gt;L0退出）<ol>
+<li>L1只是L0的一个vCPU。在L0启动L1之前，就已经在L0自己的物理VMCS（<code>vmcs01</code>）里设置了“当L1执行<code>VMLAUNCH</code>时，触发VM-Exit”</li>
+<li>所以L1执行<code>VMLAUNCH</code>时会触发一次L1-&gt;L0的VM-Exit。</li>
+</ol>
+</li>
+<li>阶段三：L0处理VMCS合并<ol>
+<li>L0被触发醒来，发现了L1vCPU试图执行VMLAUNCH，此时就知道L1试图启动L2。</li>
+<li>L0在<strong>软件里</strong>去读取L1的<code>vmcs12</code>的那块内存，发现L1想要L2在<code>CPUID</code>时退出</li>
+<li>L0修改他自己的<strong>物理VMCS</strong>（vmcs01），把<code>vmcs12</code>里的状态合并到L0的物理<code>vmcs01</code>。</li>
+<li>关键的是，L0会在物理<code>vmcs01</code>中也设置为“<code>CPUID_EXITING = 1</code>”（无论是L0自己想要截获，或是L0知道L1想要截获，都需要）</li>
+</ol>
+</li>
+<li>阶段四：L0替代L1启动L2<ol>
+<li>L0做完了合并后，自己执行<code>VMRESUME</code>指令（使用L0的物理VMCS）</li>
+<li><strong>物理CPU硬件现在直接运行L2的代码</strong></li>
+<li>L1此时还是睡眠（<code>KVM_MP_STATE_HALTED</code>），并不知情。</li>
+</ol>
+</li>
+<li>阶段五：L2的<code>CPUID</code>退出<ol>
+<li>L2执行了<code>CPUID</code>指令，<strong>物理CPU会检查当前激活的VMCS</strong>即vmcs01（vmcs12已经合并到这里了）。</li>
+<li>硬件触发VM-Exit（因为<code>CPUID_EXITING = 1</code>），物理CPU硬件的VM-Exit目标一定是L0（KVM）。L0检查原因知道是L2返回的。</li>
+</ol>
+</li>
+<li>阶段六：L0反射退出给L1。<ol>
+<li>这个就是<code>nested_vmx_reflect_vmexit</code>[[vmx_handle_exit学习记录#嵌套虚拟化处理]]</li>
+<li>L0醒来后，在软件层面决定CPUID是否发送给L1，从而修改<code>vmcs12</code>的推出信息区。</li>
+<li>于是L0唤醒vCPU</li>
+</ol>
+</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/VM-Exit/" rel="next" title="">
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86/" rel="prev" title="Linux中断处理">
+                Linux中断处理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Guest-State-Area-%E5%AE%A2%E6%88%B7%E6%9C%BA%E7%8A%B6%E6%80%81%E5%8C%BA"><span class="nav-number">1.</span> <span class="nav-text">Guest-State Area(客户机状态区)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Host-State-Area-%E5%AE%BF%E4%B8%BB%E6%9C%BA%E7%8A%B6%E6%80%81%E5%8C%BA"><span class="nav-number">2.</span> <span class="nav-text">Host-State Area (宿主机状态区)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#VM-Execution-Control-Fields%EF%BC%88%E6%89%A7%E8%A1%8C%E6%8E%A7%E5%88%B6%E5%8C%BA%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">VM-Execution Control Fields（执行控制区）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B5%8C%E5%A5%97%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%8B%E7%9A%84VMCS"><span class="nav-number">4.</span> <span class="nav-text">嵌套虚拟化下的VMCS</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="阅读本文，需要已经初步掌握了KVM的基本工作方、virtnet的基本工作原理、vhost的基本工作原理.vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。为了了解其性能提升方法。这里可以按照性能优化路径先分解一下： 性能优化迭代virtnet-QEMU模式：这是基本模拟的方式。路径最长，流程是：  Guest -&gt; virtnet -&gt; VM-Exit -&amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/26/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="阅读本文，需要已经初步掌握了KVM的基本工作方、virtnet的基本工作原理、vhost的基本工作原理.vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。为了了解其性能提升方法。这里可以按照性能优化路径先分解一下： 性能优化迭代virtnet-QEMU模式：这是基本模拟的方式。路径最长，流程是：  Guest -&gt; virtnet -&gt; VM-Exit -&amp;">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-26T08:09:38.766Z">
+<meta property="article:modified_time" content="2025-11-30T13:36:15.068Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/26/学习笔记/dpdk/vhost-user/vhost-user基本概念/"/>
+
+
+
+
+
+  <title> | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/26/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-26T16:09:38+08:00">
+                2025-11-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/" itemprop="url" rel="index">
+                    <span itemprop="name">dpdk</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/" itemprop="url" rel="index">
+                    <span itemprop="name">vhost-user</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>阅读本文，需要已经初步掌握了KVM的基本工作方、virtnet的基本工作原理、vhost的基本工作原理.<br>vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。<br>为了了解其性能提升方法。这里可以按照性能优化路径先分解一下：</p>
+<h1 id="性能优化迭代"><a href="#性能优化迭代" class="headerlink" title="性能优化迭代"></a>性能优化迭代</h1><h2 id="virtnet-QEMU模式："><a href="#virtnet-QEMU模式：" class="headerlink" title="virtnet-QEMU模式："></a>virtnet-QEMU模式：</h2><p>这是基本模拟的方式。路径最长，流程是：</p>
+<ul>
+<li>Guest -&gt; virtnet -&gt; VM-Exit -&gt; KVM（处理不了IO）-&gt; QMUE（用户态模拟）-&gt; Host Kernel(TAP) -&gt; send<br>这一模式下，virtnet作为Virtio模型的前端，QEMU的软件模拟作为了Virtio模型的后端。</li>
+</ul>
+<p>很明显这一流程上下文切换次数太多，数据拷贝次数太多。</p>
+<h2 id="vhost-net（内核卸载）模式："><a href="#vhost-net（内核卸载）模式：" class="headerlink" title="vhost-net（内核卸载）模式："></a>vhost-net（内核卸载）模式：</h2><p>这一模式做了优化，将QEMU作为Virtio后端的职责offload到了内核态的内核模块vhost。这里的工作模式是：</p>
+<ul>
+<li>Guest -&gt; virtnet -&gt; VM-Exit -&gt; KVM(发现寄存器绑定了ioeventfd，不用唤醒QEMU) -&gt; vhost-net -&gt; TAP</li>
+<li>Guest依然会触发VM-Exit，KVM依然会捕获它。但KVM只需要利用<code>ioeventfd</code>[[通信机制：ioeventfd和irqfd]]机制通知一下，就可以返回Guest了。</li>
+<li>真正搬运数据的是内核里的<code>vhost-$pid</code>线程，他绕过了QEMU用户态。<br>这就减少了一部分系统调用和对应的上下文开销。</li>
+</ul>
+<h2 id="vhost-user-OVS-DPDK-模式"><a href="#vhost-user-OVS-DPDK-模式" class="headerlink" title="vhost-user(OVS-DPDK)模式:"></a>vhost-user(OVS-DPDK)模式:</h2><p>这一模式下利用DPDK进一步提升了性能。vhost-user是DPDK底层的一个用户态库。此时的工作模式变成了：</p>
+<ul>
+<li>Guest -&gt; virtnet -&gt; vhost-user -&gt; send</li>
+<li>可以发现，vhost-user完全不需要发送VM-Exit，完全不需要kick，更不用说需要切换到KVM了。</li>
+<li>这里的vhost-user会开启Polling模式，一直在监督读取vq，并在收到消息后第一时间立即发送，且发送消息<strong>不</strong>需要经过<strong>vhost内核模块</strong>，更重要的是绕过了<strong>整个Host Linux网络协议栈</strong>（没有sk_buff，没有iptables）。</li>
+</ul>
+<p>vhost-user之所以能够做到绕过vhost内核模块，原因在于QEMU的virtio设备模型进行了适配融合。</p>
+<ul>
+<li>QEMU模拟了一个virtio设备，该设备会出现在客户机的特定PCI端口上，Guest可以无缝探测和配置该设备。此外，他将ioeventfd映射到QEMU模拟设备的内存映射I&#x2F;O空间中，并将irqfd映射到其全局系统中断（GSI）。</li>
+<li>它并不实际实现了virtio的数据路径，而是充当vhost-user协议中的主节点，将此卸载到DPDK中的vhost-user库。</li>
+<li>所以Guest不会察觉到通知中断都在vhost-user库之间进行转发和接收。因为QEMU并不需要告知Guest他将任务offload了。</li>
+<li>QEMU还需要处理一些发向vhost-user的control virtqueue请求，主要是类似于“修改MAC地址”等杂事。这些低频的指令依然是QEMU接收。但是如果有需要，QEMU会通过Unix Socket再转告给DPDK。</li>
+</ul>
+<p>当然，这里还有更复杂的第四种优化方法，也是最后介绍的一种路径：</p>
+<h2 id="virtio-pmd"><a href="#virtio-pmd" class="headerlink" title="virtio-pmd"></a>virtio-pmd</h2><p>在这一模式下，需要集成VFIO[[VFIO]]与IOMMU[[IOMMU]]来进行配合。<br>在Guest OS内。IOMMU也是物理的，所以有vIOMMU这一概念。<br>vIOMMU与DPDK的合作下，存在一个问题：<br>在虚拟机里的网卡驱动以为自己看到了真实的物理内存GPA，但其实那是宿主机的虚拟内存HVA。vIOMMU负责维护这层映射关系：IOVA-&gt;GPA-&gt;HPA。<br>所以vIOMMU有如下的特点：</p>
+<ul>
+<li>它将Guest的IOVA（I&#x2F;O虚拟地址）转化为GPA，就像IOMMU在HOST所做的一样。然后通过QEMU的内存管理系统将GPA转换为QEMU的HVA</li>
+<li>像IOMMU一样执行设备隔离。</li>
+<li>实现I&#x2F;O TLB API。以便可以从QEMU外部查询映射。</li>
+</ul>
+<p>同时注意到vIOMMU与任何的Guest的网络应用程序之间的集成通常通过VFIO驱动程序映射实现。正如前文所提到的。该驱动程序执行设备隔离，并自动地将IOVA到GPA地映射添加到IOMMU。<br>这里的行为解释也可以参考实验中：</p>
+<ul>
+<li>启动<code>testpmd</code>后，VFIO会使得vIOMMU把网卡的内存区域（IOVA）映射给这个DPDK应用程序，让网卡可以直接写进来（GPA）[[vhost-user实验]]</li>
+</ul>
+<p>值得注意的是：DPDK的<code>Hugepages</code>采用一个<strong>大</strong>（Hugepages）的<strong>静态内存池</strong>来存储数据包缓存和虚拟队列，因此对于地址翻译转换在使用动态映射时，性能损失大幅降低。</p>
+<p>这里引用redhat博客<br>	<a target="_blank" rel="noopener" href="https://www.redhat.com/en/blog/journey-vhost-users-realm">https://www.redhat.com/en/blog/journey-vhost-users-realm</a><br>中的图：<br>![[redhat增强架构.png]]<br>同时在这里引入对于博客讲解的内容的理解：</p>
+<ul>
+<li>GPA的空间是Guest所感知到的物理内存，其实是HVA。所以VQ内存区域被分配时，他最终还是会在Host的物理内存某处。</li>
+<li>当DPDK的Vring物理内存地址联系上了IOVA，必须将与其关联的Guest的地址GPA一起填入进vIOMMU的TLB表中。<br>  网卡 (设备)<br>    |<br>    | 发起访问: “我要读 IOVA 0x9999”<br>    v<br>  +————-+<br>  |   vIOMMU      | &lt;— 博客那句话就在描述这里的数据填充<br>  |————-|<br>  | TLB             |<br>  | 0x9999 —-&gt; |—- 翻译成功! —-&gt; 是 GPA 0x1000<br>  +————-+<br>    |<br>    | 访问实际位置<br>    v<br>  +———————–+<br>  | Guest 物理内存 (GPA)      |<br>  | 虚拟队列 (vring)           | &lt;— 数据在这里 (地址 0x1000)<br>  +———————–+</li>
+<li>QEMU的内存管理系统能够感知GPA在其进程的HVA中的位置，所以能够转化GPA-&gt;HVA（QEMU）</li>
+<li>vhost-user库尝试访问没有对应转换的IOVA时，会通过辅助unix套接字发送IOTLB未命中消息。</li>
+<li>IOTLB API 接收请求并查找地址，首先将 IOVA 转换为 GPA，最后将 GPA 转换为 HVA。然后，它通过主 Unix Socket将转换后的地址发送回 vhost-user 库。</li>
+<li>最后，vhost-user 库还需要进行最后一次转换。由于它将 qemu 的内存映射到了自己的内存中，因此它必须将 qemu 的 HVA 转换为自己的 HVA（两个进程的VA不一致），才能访问共享内存。</li>
+<li>这里的QEMU下有一个vhost-user模块，是负责转发Guest的控制需求，通过Unix Socket和DPDK App沟通。因为Guest只能知道QEMU模拟出来的设备，所以需要这样一个组件作为中间代理。它只负责控制面，不管数据。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/25/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/vhost.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" rel="next" title="vhost.c学习记录">
+                <i class="fa fa-chevron-left"></i> vhost.c学习记录
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/27/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/IOMMU/" rel="prev" title="IOMMU">
+                IOMMU <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E8%BF%AD%E4%BB%A3"><span class="nav-number">1.</span> <span class="nav-text">性能优化迭代</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#virtnet-QEMU%E6%A8%A1%E5%BC%8F%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">virtnet-QEMU模式：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#vhost-net%EF%BC%88%E5%86%85%E6%A0%B8%E5%8D%B8%E8%BD%BD%EF%BC%89%E6%A8%A1%E5%BC%8F%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">vhost-net（内核卸载）模式：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#vhost-user-OVS-DPDK-%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.3.</span> <span class="nav-text">vhost-user(OVS-DPDK)模式:</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#virtio-pmd"><span class="nav-number">1.4.</span> <span class="nav-text">virtio-pmd</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

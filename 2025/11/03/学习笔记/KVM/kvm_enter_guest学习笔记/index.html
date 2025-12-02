@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="kvm_enter_guest是一个很长的函数。还是一个有大量分发的函数。所以可以把该函数分为4阶段来进行分析：  进入Guest前的最后准备 进入Guest内部和退出循环 退出Guest后的善后处理 分发退出事件。  而各个阶段之间的临界点就是如下代码块： 12345678for (;;) &#123;	&#x2F;&#x2F; ...	exit_fastpath &#x3D; kvm_x86_call(vcpu_run)(">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kvm_enter_guest学习笔记">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="kvm_enter_guest是一个很长的函数。还是一个有大量分发的函数。所以可以把该函数分为4阶段来进行分析：  进入Guest前的最后准备 进入Guest内部和退出循环 退出Guest后的善后处理 分发退出事件。  而各个阶段之间的临界点就是如下代码块： 12345678for (;;) &#123;	&#x2F;&#x2F; ...	exit_fastpath &#x3D; kvm_x86_call(vcpu_run)(">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-03T09:11:19.945Z">
+<meta property="article:modified_time" content="2025-11-22T09:25:12.528Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/学习笔记/KVM/kvm_enter_guest学习笔记/"/>
+
+
+
+
+
+  <title>kvm_enter_guest学习笔记 | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">kvm_enter_guest学习笔记</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>kvm_enter_guest是一个很长的函数。还是一个有大量分发的函数。所以可以把该函数分为4阶段来进行分析：</p>
+<ol>
+<li>进入Guest前的最后准备</li>
+<li>进入Guest内部和退出循环</li>
+<li>退出Guest后的善后处理</li>
+<li>分发退出事件。</li>
+</ol>
+<p>而各个阶段之间的临界点就是如下代码块：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (;;) &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">	exit_fastpath = <span class="built_in">kvm_x86_call</span>(vcpu_run)(vcpu,</span><br><span class="line">						   req_immediate_exit);</span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">likely</span>(exit_fastpath != EXIT_FASTPATH_REENTER_GUEST))</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>在这个代码段之前的工作都算是1阶段——即最后准备工作。</p>
+<h2 id="准备阶段（VM-Entry之前）"><a href="#准备阶段（VM-Entry之前）" class="headerlink" title="准备阶段（VM-Entry之前）"></a>准备阶段（VM-Entry之前）</h2><p>此阶段代码调用大量的如下的模式：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 检查待办事项 &quot;KVM_REQ_XXX&quot;</span></span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">kvm_check_request</span>(KVM_REQ_XXX, vcpu))</span><br><span class="line">    <span class="built_in">do_something</span>(); <span class="comment">// 执行这个待办事项</span></span><br></pre></td></tr></table></figure>
+<p>在这里就像依次check To-do list，进行事无巨细的检查。<br>其中较为关键的待办事项如下：</p>
+<ol>
+<li>TLB缓存刷新确认</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">        <span class="keyword">if</span> (<span class="built_in">kvm_check_request</span>(KVM_REQ_TLB_FLUSH, vcpu))</span><br><span class="line">            <span class="built_in">kvm_vcpu_flush_tlb_all</span>(vcpu);</span><br></pre></td></tr></table></figure>
+<p>其他 CPU 上的 KVM 模块修改了页表，请求这个 vCPU <strong>刷新它的 TLB</strong> (地址翻译缓存)。这是保证 MMU 一致性的关键</p>
+<ol start="2">
+<li>NMI注入检查</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">kvm_check_request</span>(KVM_REQ_NMI, vcpu))</span><br><span class="line">            <span class="built_in">process_nmi</span>(vcpu);</span><br></pre></td></tr></table></figure>
+<p>有“不可屏蔽中断”(NMI) 需要在 vCPU 恢复运行时<strong>立即注入</strong>。[[Linux中断处理#NMI]]</p>
+<ol start="3">
+<li>三重错误检查</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">kvm_check_request</span>(KVM_REQ_TRIPLE_FAULT, vcpu)) &#123;</span><br><span class="line">	vcpu-&gt;run-&gt;exit_reason = KVM_EXIT_SHUTDOWN;</span><br><span class="line">	vcpu-&gt;mmio_needed = <span class="number">0</span>;</span><br><span class="line">	r = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">goto</span> out;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>vCPU发生了无法恢复的致命错误“三重错误”后，终止循环返回给QEMU，告诉QEMU“这台虚拟机挂了”。</p>
+<h2 id="最后准备"><a href="#最后准备" class="headerlink" title="最后准备"></a>最后准备</h2><p>当上述的待办事项处理完后,就到了准备进入Guest模式的最后准备工作。这里每一步都很重要：</p>
+<ol>
+<li><code>kvm_mmu_reload(vcpu)</code>: <strong>加载 Guest 的页表</strong> (即 <code>CR3</code> 寄存器)。</li>
+<li><code>preempt_disable()</code>: <strong>关闭宿主机内核抢占</strong>。</li>
+<li><code>local_irq_disable()</code>: <strong>关闭宿主机物理中断</strong>。</li>
+<li><code>smp_store_release(&amp;vcpu-&gt;mode, IN_GUEST_MODE)</code>: <strong>“宣布进入”</strong>。<ul>
+<li><strong>这是整段代码中最关键的锁之一！</strong> 它是一个内存屏障，用来告诉<strong>所有其他物理 CPU</strong>：“这个 vCPU 线程现在正式进入 Guest 模式了。你们如果想修改 KVM 状态，必须等它出来。”</li>
+</ul>
+</li>
+<li><code>kvm_vcpu_srcu_read_unlock(vcpu)</code>: <strong>释放 SRCU 锁</strong>。</li>
+<li><code>sync_pir_to_irr</code> &#x2F; <code>switch_fpu_return</code> &#x2F; <code>set_debugreg</code>: <strong>加载最后的硬件状态</strong>，如 APICv 中断状态、FPU 状态、调试寄存器等。</li>
+</ol>
+<h2 id="进入运行Guest"><a href="#进入运行Guest" class="headerlink" title="进入运行Guest"></a>进入运行Guest</h2><p>代码块</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (;;) &#123;</span><br><span class="line">	</span><br><span class="line">	exit_fastpath = <span class="built_in">kvm_x86_call</span>(vcpu_run)(vcpu,</span><br><span class="line">						   req_immediate_exit);	</span><br><span class="line">	++vcpu-&gt;stat.exits;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这就是关键关键的进入vCPU_run以及退出的内容了。<br>这里的vcpu_run调用的其实是<code>vmx.c</code>的<code>vmx_vcpu_run</code>函数。这个函数的行为如下：</p>
+<ol>
+<li>安全检查 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">unlikely</span>(vmx-&gt;emulation_required)) &#123;</span><br><span class="line">	vmx-&gt;fail = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	vmx-&gt;exit_reason.full = EXIT_REASON_INVALID_STATE;</span><br><span class="line">	vmx-&gt;exit_reason.failed_vmentry = <span class="number">1</span>;</span><br><span class="line">	<span class="built_in">kvm_register_mark_available</span>(vcpu, VCPU_EXREG_EXIT_INFO_1);</span><br><span class="line">	vmx-&gt;exit_qualification = ENTRY_FAIL_DEFAULT;</span><br><span class="line">	<span class="built_in">kvm_register_mark_available</span>(vcpu, VCPU_EXREG_EXIT_INFO_2);</span><br><span class="line">	vmx-&gt;exit_intr_info = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">return</span> EXIT_FASTPATH_NONE;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+ 这里是在检查是否vCPU处于<code>emulation_required</code>（无效状态），若是则会填入无效状态的VM-Exit（伪装的），然后返回值告知vcpu_enter_cpu转入vmx_handle_exit来进行处理。</li>
+<li>同步Guest状态</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">kvm_register_is_dirty</span>(vcpu, VCPU_REGS_RSP))</span><br><span class="line">        <span class="built_in">vmcs_writel</span>(GUEST_RSP, vcpu-&gt;arch.regs[VCPU_REGS_RSP]);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">kvm_register_is_dirty</span>(vcpu, VCPU_REGS_RIP))</span><br><span class="line">        <span class="built_in">vmcs_writel</span>(GUEST_RIP, vcpu-&gt;arch.regs[VCPU_REGS_RIP]);</span><br></pre></td></tr></table></figure>
+<p>用了脏位标志，很明显这个就是一种惰性同步。最后一刻将register的信息写入到VMCS上[[VMCS#Guest-State Area]]</p>
+<ol start="3">
+<li>同步Host状态</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> (<span class="built_in">kvm_register_is_dirty</span>(vcpu, VCPU_REGS_RSP))</span><br><span class="line">        <span class="built_in">vmcs_writel</span>(GUEST_RSP, vcpu-&gt;arch.regs[VCPU_REGS_RSP]);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">kvm_register_is_dirty</span>(vcpu, VCPU_REGS_RIP))</span><br><span class="line">        <span class="built_in">vmcs_writel</span>(GUEST_RIP, vcpu-&gt;arch.regs[VCPU_REGS_RIP]);</span><br><span class="line">    vcpu-&gt;arch.regs_dirty = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+<p>必须要在VMENTRY之前更新<strong>HOST</strong>的<code>CR3</code>。因为KVM（HOST内核）自己也可能被调度！</p>
+<p>否则可能发生反例：<br>例如：</p>
+<ul>
+<li>当vcpu_enter_guest做准备时，KMV线程呗宿主机调度器卡攻占了，切换到了另一个进程，另一进程有自己的CR3。</li>
+<li><ul>
+<li>那么一旦切换回KVM后。他可能在一个与之前不同的CR3上下文中运行（x86下的PCID变化）。</li>
+</ul>
+</li>
+<li>如果KVM没有重新读取当前的<code>CR3</code>并更新<code>HOST_CR3</code>字段，那么当VM-Exit发生时，PCU硬件会自动加载一个错误的<code>HOST_CR3</code>.</li>
+</ul>
+<ol start="4">
+<li>接下来开始正式调用</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* The actual VMENTER/EXIT is in the .noinstr.text section. */</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">vmx_vcpu_enter_exit</span>(vcpu, __vmx_vcpu_run_flags(vmx));</span><br></pre></td></tr></table></figure>
+<p>来进入VMENTER。<br>vmx_vcpu_enter_exit<code> 是一个**内联汇编**（</code>asm volatile<code>）函数。 [[vmx_vcpu_enter_exit]] 它会查看 </code>__vmx_vcpu_run_flags<code>的值（这个值是根据</code>vmx-&gt;loaded_vmcs-&gt;launched&#96; 标志位计算的）。</p>
+<ul>
+<li><strong>第一次运行</strong>：<code>launched = 0</code>，汇编执行 <strong><code>VMLAUNCH</code></strong>。</li>
+<li><strong>后续运行</strong>：<code>launched = 1</code>，汇编执行 <strong><code>VMRESUME</code></strong>。</li>
+</ul>
+<h1 id="VMEXIT后的处理"><a href="#VMEXIT后的处理" class="headerlink" title="VMEXIT后的处理"></a>VMEXIT后的处理</h1><ol>
+<li>恢复Host状态</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> (vcpu-&gt;arch.host_debugctl)</span><br><span class="line">        <span class="built_in">update_debugctlmsr</span>(vcpu-&gt;arch.host_debugctl);</span><br></pre></td></tr></table></figure>
+<p>退出了Guest后第一时间恢复Host状态。<br>2. 如果VMENTRY失败进行处理，否则设置相关标志位：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">unlikely</span>(vmx-&gt;exit_reason.failed_vmentry))</span><br><span class="line">	<span class="keyword">return</span> EXIT_FASTPATH_NONE;</span><br><span class="line"></span><br><span class="line">vmx-&gt;loaded_vmcs-&gt;launched = <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<p>launched标志位设置完成后，下一次KVM 再调用 <code>vmx_vcpu_run</code> 时，<code>__vmx_vcpu_run_flags</code> 就会告诉汇编代码去执行 <code>VMRESUME</code> 而不是 <code>VMLAUNCH</code>。<br>3. Fastpath处理</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">vmx_recover_nmi_blocking</span>(vmx);</span><br><span class="line"><span class="built_in">vmx_complete_interrupts</span>(vmx);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="built_in">vmx_exit_handlers_fastpath</span>(vcpu, force_immediate_exit);</span><br></pre></td></tr></table></figure>
+<p>在返回给<code>vmx_handle_exit</code>前，KVM会做最后一次检查来尝试：是否可以提前不退出KVM就<strong>处理VM-Exit</strong>。<br><code>vmx_exit_handlers_fastpath</code>是一个小型的switch，里面嵌套了更多层的快速处理路径</p>
+<ul>
+<li>对于嵌套虚拟化，除了处理某些VMX preemption timer退出可以处理，其余都是慢速路径   </li>
+<li>Guest试图写入一个MSR，调用嵌套的快速处理函数</li>
+<li>Guest OS（vCPU）执行了HLT指令，意味着Guest OS空闲了，此时会嵌套调用<code>handle_fastpath_hlt(vcpu)</code>，最后将vCPU的状态设置为<code>KVM_MP_STATE_HALTED</code>。<ul>
+<li>这个函数并不会返回<code>EXIT_FASTPATH_EXIT_USERSPACE</code>（退回到了QEMU）而是通知vcpu_run决定执行后，根据vCPU状态时HALTED而执行block操作，此时才是vCPU真正睡眠。</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2024/11/19/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/" rel="next" title="vmx_vcpu_enter_exit">
+                <i class="fa fa-chevron-left"></i> vmx_vcpu_enter_exit
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/" rel="prev" title="KVM_ioctl学习日记">
+                KVM_ioctl学习日记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E9%98%B6%E6%AE%B5%EF%BC%88VM-Entry%E4%B9%8B%E5%89%8D%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">准备阶段（VM-Entry之前）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E%E5%87%86%E5%A4%87"><span class="nav-number">2.</span> <span class="nav-text">最后准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E5%85%A5%E8%BF%90%E8%A1%8CGuest"><span class="nav-number">3.</span> <span class="nav-text">进入运行Guest</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#VMEXIT%E5%90%8E%E7%9A%84%E5%A4%84%E7%90%86"><span class="nav-number">4.</span> <span class="nav-text">VMEXIT后的处理</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

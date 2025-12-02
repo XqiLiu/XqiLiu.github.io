@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="virtio,net," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="这一部分总的来讲，我们最好带着一个问题来分析研究： Guest 里的 virtio-net 驱动是如何把一个 sk_buff (Linux 的网络包) 拆解，并“挂”到 virtqueue 上的？ 我们通过注册在netdev_ops 12345678dev-&gt;netdev_ops &#x3D; &amp;virtnet_netdev;static const struct net_device_ops">
+<meta property="og:type" content="article">
+<meta property="og:title" content="virtnet网络包发包">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="这一部分总的来讲，我们最好带着一个问题来分析研究： Guest 里的 virtio-net 驱动是如何把一个 sk_buff (Linux 的网络包) 拆解，并“挂”到 virtqueue 上的？ 我们通过注册在netdev_ops 12345678dev-&gt;netdev_ops &#x3D; &amp;virtnet_netdev;static const struct net_device_ops">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-24T07:10:00.000Z">
+<meta property="article:modified_time" content="2025-11-24T12:34:38.086Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="net">
+<meta property="article:tag" content="virtio">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/24/学习笔记/VirtIO/virtio-net/virtnet网络包发包/"/>
+
+
+
+
+
+  <title>virtnet网络包发包 | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">virtnet网络包发包</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-24T15:10:00+08:00">
+                2025-11-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/VirtIO/" itemprop="url" rel="index">
+                    <span itemprop="name">VirtIO</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/VirtIO/virtio-net/" itemprop="url" rel="index">
+                    <span itemprop="name">virtio-net</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>这一部分总的来讲，我们最好带着一个问题来分析研究：<br> <strong>Guest 里的 virtio-net 驱动是如何把一个 sk_buff (Linux 的网络包) 拆解，并“挂”到 virtqueue 上的？</strong></p>
+<p>我们通过注册在<code>netdev_ops</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">dev-&gt;netdev_ops = &amp;virtnet_netdev;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">net_device_ops</span> <span class="title">virtnet_netdev</span> =</span> &#123;</span><br><span class="line">    .ndo_open      = virtnet_open,</span><br><span class="line">    .ndo_stop      = virtnet_close,</span><br><span class="line">    .ndo_start_xmit = start_xmit,  <span class="comment">// &lt;--- 就是它！</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>中的<code>start_xmit</code>函数来开始追踪一次网络发包流程。</p>
+<p>这里的重要的结构体<code>sk_buff *skb</code> [[virtnet中重要的结构体#sk_buff]] 代表了一个网络包，此时这个包还处于Guest的内存里（毕竟我们目前是处于virtnet中）。</p>
+<p>代码的开始</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">netdev_tx_t</span> <span class="title function_">start_xmit</span><span class="params">(<span class="keyword">struct</span> sk_buff *skb, <span class="keyword">struct</span> net_device *dev)</span> &#123;</span><br><span class="line">	<span class="type">int</span> qnum = skb_get_queue_mapping(skb);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此时的qnum就是内核根据包的特性，选择包走哪一个sq(send queue)。</p>
+<p>接下来的核心操作就是在函数<code>xmit_skb</code>上</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">err = xmit_skb(sq, skb, !use_napi);</span><br></pre></td></tr></table></figure>
+<h1 id="xmit-skb"><a href="#xmit-skb" class="headerlink" title="xmit_skb"></a>xmit_skb</h1><p>这一个函数可以总结为做了三件事</p>
+<p><strong>Can push？</strong><br>这一部分是因为virtio的协议规定了，发送任何数据包之前，都必须先发送一个virtio_net_hdr。在这里对于这个头存放位置做了一个简单的优化。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">can_push = vi-&gt;any_header_sg &amp;&amp;</span><br><span class="line">		!((<span class="type">unsigned</span> <span class="type">long</span>)skb-&gt;data &amp; (__alignof__(*hdr) - <span class="number">1</span>)) &amp;&amp;</span><br><span class="line">		!skb_header_cloned(skb) &amp;&amp; skb_headroom(skb) &gt;= hdr_len;</span><br></pre></td></tr></table></figure>
+<p>通过判断skb_headroom（skb在数据包最前面预留的空间）的尺寸和hdr_len的尺寸对比，以及是否能对其，来判断是否可以吧hdr的指针指向skb-&gt;data的前面位置或是备用区。</p>
+<ul>
+<li>为什么hdr_len是不固定的呢，因为长度取决于probe阶段协议。有10、12、20字节或更多的常见配置长度。</li>
+</ul>
+<p><strong>Scatter-Gather</strong><br>这一步是根据第一步的布局，把零散的内存块记录到Scatter-Gather List（变量sq-&gt;sg）里</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sg_init_table(sq-&gt;sg, skb_shinfo(skb)-&gt;nr_frags + (can_push ? <span class="number">1</span> : <span class="number">2</span>));</span><br></pre></td></tr></table></figure>
+<p>操作系统里的一个网络包skb，在逻辑上是一个整体。但在物理内存，他可能是碎的，如果是copy到一块新的内存里，太慢了。所以采用SG List告诉硬件应该去哪里找skg。<br>sg_init_table也是一个常用的通用函数，初始化了一个sg。<br>接下来</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">sg_init_table(sq-&gt;sg, skb_shinfo(skb)-&gt;nr_frags + (can_push ? <span class="number">1</span> : <span class="number">2</span>));</span><br><span class="line"><span class="keyword">if</span> (can_push) &#123;</span><br><span class="line">	__skb_push(skb, hdr_len);</span><br><span class="line">	num_sg = skb_to_sgvec(skb, sq-&gt;sg, <span class="number">0</span>, skb-&gt;len);</span><br><span class="line">	<span class="keyword">if</span> (unlikely(num_sg &lt; <span class="number">0</span>))</span><br><span class="line">		<span class="keyword">return</span> num_sg;</span><br><span class="line">	<span class="comment">/* Pull header back to avoid skew in tx bytes calculations. */</span></span><br><span class="line">	__skb_pull(skb, hdr_len);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	sg_set_buf(sq-&gt;sg, hdr, hdr_len);</span><br><span class="line">	num_sg = skb_to_sgvec(skb, sq-&gt;sg + <span class="number">1</span>, <span class="number">0</span>, skb-&gt;len);</span><br><span class="line">	<span class="keyword">if</span> (unlikely(num_sg &lt; <span class="number">0</span>))</span><br><span class="line">		<span class="keyword">return</span> num_sg;</span><br><span class="line">	num_sg++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里有两个分支：</p>
+<ul>
+<li>分支A：<br>  <code>can_push = true</code>，那么就把virtio hdr卸载headroom里。这个SG可以少一个条目。</li>
+<li>分支B：<br>  否则，只能在旁边再找一个小内存<code>Virtio Header</code>来存放virtio hdr。<br>这算是一个小优化。</li>
+</ul>
+<p><strong>将数据写到virtqueue</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> virtqueue_add_outbuf(sq-&gt;vq, sq-&gt;sg, num_sg,</span><br><span class="line">				    skb_to_ptr(skb, orphan), GFP_ATOMIC);</span><br></pre></td></tr></table></figure>
+<p>这个函数就是关键的工作，将上述设生成的<code>sg</code>写入到<code>Vring</code>中。<br>这一步也是把数据从driver的这一软件形态转换传输到硬件协议形态（device）</p>
+<p>这里的<code>virtqueue_add_outbuf</code>继续向下查看实现，可以发现一个分支：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">int</span> <span class="title function_">virtqueue_add</span><span class="params">(<span class="keyword">struct</span> virtqueue *_vq,</span></span><br><span class="line"><span class="params">				<span class="keyword">struct</span> scatterlist *sgs[],</span></span><br><span class="line"><span class="params">				<span class="type">unsigned</span> <span class="type">int</span> total_sg,</span></span><br><span class="line"><span class="params">				<span class="type">unsigned</span> <span class="type">int</span> out_sgs,</span></span><br><span class="line"><span class="params">				<span class="type">unsigned</span> <span class="type">int</span> in_sgs,</span></span><br><span class="line"><span class="params">				<span class="type">void</span> *data,</span></span><br><span class="line"><span class="params">				<span class="type">void</span> *ctx,</span></span><br><span class="line"><span class="params">				<span class="type">gfp_t</span> gfp)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">vring_virtqueue</span> *<span class="title">vq</span> =</span> to_vvq(_vq);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> vq-&gt;packed_ring ? virtqueue_add_packed(_vq, sgs, total_sg,</span><br><span class="line">					out_sgs, in_sgs, data, ctx, gfp) :</span><br><span class="line">				 virtqueue_add_split(_vq, sgs, total_sg,</span><br><span class="line">					out_sgs, in_sgs, data, ctx, gfp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里是virtio的从v1.0到v1.1的核心变革。[[virtqueue#virtiov1.1]]<br>如果是传统v1.0版本，则是不支持packed_ring。否则是支持packed_ring模式从而提供了缓存命中率，提升了性能。<br>接下来还是简单以v1.0作为讨论基础，介绍一下他的执行工作：</p>
+<ol>
+<li>判断SG的列表长度和virtqueue的配置，来选择hi用indirect mode还是direct mode。<ul>
+<li>如果是indirect，是因为<code>total_sg</code>较大，驱动会通过kmalloc分配一块独立的非连续内存来存放这一组描述符表。。这样该操作仅会消耗1个描述符。见笑了主环的随便化，提高主环的能容纳的请求总数。</li>
+<li>直接模式就是直接小号<code>total_sg</code>个主环描述符。</li>
+</ul>
+</li>
+<li><h2 id="构造描述符链表，把OS的物理内存地址填入Virtio硬件定义的vring-desc结构体中，并建立链表关系。-遍历"><a href="#构造描述符链表，把OS的物理内存地址填入Virtio硬件定义的vring-desc结构体中，并建立链表关系。-遍历" class="headerlink" title="构造描述符链表，把OS的物理内存地址填入Virtio硬件定义的vring_desc结构体中，并建立链表关系。 - 遍历"></a>构造描述符链表，把OS的物理内存地址填入Virtio硬件定义的vring_desc结构体中，并建立链表关系。<br> - 遍历</h2><ul>
+<li>输入的sgs，针对每一个segment都执行：<ol>
+<li>DMA映射，获取该片段的物理地址和长度</li>
+<li>填充描述符，填写到vring_desc</li>
+<li>设置标志位，来区分是indirect的描述符；还是说这是一个发送队列或接收队列；抑或是说这是一并不是数据的终点，还有Next。</li>
+<li>链接索引，只想下一个空闲描述符的索引。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>保存驱动的上下文。建立Ring索引和操作系统数据结构之间的映射，从而可以在请求完成时进行资源回收。<ul>
+<li>virtqueue为了一个名为<code>desc_state</code>的私有数组，仅驱动可见<ul>
+<li>保存Cookie，将传入的data指针（发包流程中的skb的指针）保存在<code>desc_state[head]</code>中，其中head是本次请求所占用的第一个描述符的索引。</li>
+<li>更新空闲指针</li>
+<li>减少空闲指针技术</li>
+<li>Host的通知请求完成时，驱动只知道归还的索引ID，必须通过查询<code>desc_state[head]</code>才能找回原始的skb并释放内存完成GC。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>发布到Avail Ring，将构建好的描述符链的头缩i你写入共享内存，并通知设备有新请求待处理。<ul>
+<li>计算avail ring的当前位置，把链表索引（<code>head</code>）写入<code>vring-&gt;avail-&gt;ring[idx]</code>。此时数据已经写入设备，但设备尚未看见。</li>
+<li>使用内存屏障，强制保证上述所有对描述符表和avial-&gt;ring的写操作，在执行更新idex之前，必须已经完成并对其他核心可见。防止乱序执行，导致设备读取到未初始化的描述符。</li>
+<li>更新索引，设备（Host）扫描avail ring的游标 <code>vring-&gt;avail-&gt;idx</code> 加 1。只有<code>idx</code>增加时，设备才知道有新的请求。</li>
+</ul>
+</li>
+</ol>
+<h1 id="kick"><a href="#kick" class="headerlink" title="kick"></a><strong>kick</strong></h1><p>最后一步就是驱动kick设备了。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">kick = use_napi ? __netdev_tx_sent_queue(txq, skb-&gt;len, xmit_more) :</span><br><span class="line">		  !xmit_more || netif_xmit_stopped(txq);</span><br><span class="line"><span class="keyword">if</span> (kick) &#123;</span><br><span class="line">	<span class="keyword">if</span> (virtqueue_kick_prepare(sq-&gt;vq) &amp;&amp; virtqueue_notify(sq-&gt;vq)) &#123;</span><br><span class="line">		u64_stats_update_begin(&amp;sq-&gt;stats.syncp);</span><br><span class="line">		u64_stats_inc(&amp;sq-&gt;stats.kicks);</span><br><span class="line">		u64_stats_update_end(&amp;sq-&gt;stats.syncp);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的kick参数分为两种情况：</p>
+<ul>
+<li>由NAPI控制：<ul>
+<li><code>!xmit_more</code>: 这是内核协议栈传下来的一个暗示。<ul>
+<li><strong>True</strong>：意思是当前是最后一个包，必须kick，否则消息就无法传达到Host了。</li>
+<li><strong>False</strong>：当前不是最后一个包，可以先不kick。</li>
+</ul>
+</li>
+<li><code>netif_xmit_stopped</code>: 队列被暂停了（可能满了）。这时候必须 Kick，要求 Host 处理后腾出空间。</li>
+</ul>
+</li>
+<li>由NAPI控制<ul>
+<li>BQL（Byte Queue Limits）：<code>__netdev_tx_sent_queue</code>是Linux内核的一种高级流控算法。它不只是看有没有下一个包，还要根据<strong>字节数</strong>来算。</li>
+<li>逻辑：计算当前堆积在队列里的字节数是否超过了一个动态阈值。如果没超过，即时没有下一个包，也可能推迟kick，试图凑出更多的包。</li>
+</ul>
+</li>
+</ul>
+<p>当确定需要kick之后，就开始执行真正的kick。这里有两个函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (virtqueue_kick_prepare(sq-&gt;vq) &amp;&amp; virtqueue_notify(sq-&gt;vq))</span><br></pre></td></tr></table></figure>
+<p>第一个<code>virtqueue_kick_prepare(sq-&gt;vq)</code>内部使用了一个virtio v1.0引入的高级特性<code>VIRTIO_RING_F_EVENT_IDX</code>。它更加智能实现了一种<strong>定量通知</strong></p>
+<ul>
+<li>原理：Host不再挂禁止kick的标记位，而是在共享内存的特定位置写下（await_event）写下一个<strong>数字索引号</strong>，来指示Guest在idx大于等于该数字索引号的时候再kick</li>
+<li>在内部需要使用内存屏障来保证不出现死锁，Host以为没有消息，Guest以为Host是等待消息便不去通知。从而造成网络丢包。</li>
+</ul>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>一个完整的virtio-net的发包流程，可以总结为如下</p>
+<ul>
+<li><strong>入口</strong>：Guest 协议栈调用 <code>start_xmit</code>，此时数据在 <code>sk_buff</code> 中。</li>
+<li><strong>准备头部</strong>：驱动检查 Headroom（<code>can_push</code>）。若空间充足，将 <code>virtio_net_hdr</code> 直接写入 <code>skb</code> 头部以获得连续内存；否则在 SG List 中单独映射一个头部。</li>
+<li><strong>内存映射 (DMA Mapping)</strong>：将 <code>skb</code> 中的逻辑地址转换为 Host 可见的<strong>物理地址</strong>，并整理成 Scatter-Gather List (SG List)。</li>
+<li><strong>填充描述符 (Virtqueue Add)</strong>：<ul>
+<li>根据 SG List 长度，决定使用 <strong>Direct</strong>（直接填充主环）还是 <strong>Indirect</strong>（外挂描述符表）模式。</li>
+<li>将物理地址填入 Descriptor Table，并设置 <code>NEXT</code> 标志链接各片段。</li>
+</ul>
+</li>
+<li><strong>保存上下文</strong>：将 <code>skb</code> 指针保存在驱动私有的 <code>desc_state</code> 数组中，以便后续 Host 处理完后，Guest 能找回并释放该 <code>skb</code>。</li>
+<li><strong>发布 (Publish)</strong>：将链头索引写入 <strong>Available Ring</strong>，并执行<strong>内存屏障</strong>，确保描述符写操作对 Host 可见。</li>
+<li><strong>通知 (Kick)</strong><ul>
+<li>首先利用 Linux 内核的 <strong>xmit_more&#x2F;BQL</strong> 机制进行本地批量提交。</li>
+<li>若必须提交，再检查 Virtio 的 <strong>Event Index &#x2F; No_Notify</strong> 标志。只有在 Host 明确需要通知时，才写寄存器触发 VM-Exit。</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/virtio/" rel="tag"># virtio</a>
+          
+            <a href="/tags/net/" rel="tag"># net</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/Virtnet%E6%94%B6%E5%8C%85%E8%BF%87%E7%A8%8B/" rel="next" title="">
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/XDP/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#xmit-skb"><span class="nav-number">1.</span> <span class="nav-text">xmit_skb</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E6%8F%8F%E8%BF%B0%E7%AC%A6%E9%93%BE%E8%A1%A8%EF%BC%8C%E6%8A%8AOS%E7%9A%84%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E5%9C%B0%E5%9D%80%E5%A1%AB%E5%85%A5Virtio%E7%A1%AC%E4%BB%B6%E5%AE%9A%E4%B9%89%E7%9A%84vring-desc%E7%BB%93%E6%9E%84%E4%BD%93%E4%B8%AD%EF%BC%8C%E5%B9%B6%E5%BB%BA%E7%AB%8B%E9%93%BE%E8%A1%A8%E5%85%B3%E7%B3%BB%E3%80%82-%E9%81%8D%E5%8E%86"><span class="nav-number">1.1.</span> <span class="nav-text">构造描述符链表，把OS的物理内存地址填入Virtio硬件定义的vring_desc结构体中，并建立链表关系。 - 遍历</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#kick"><span class="nav-number">2.</span> <span class="nav-text">kick</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

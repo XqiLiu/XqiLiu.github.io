@@ -259,7 +259,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/APIC%E4%B8%AD%E6%96%AD%E8%99%9A%E6%8B%9F%E5%8C%96/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -278,7 +278,333 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/" itemprop="url">KVM_ioctl学习日记</a></h1>
+                <a class="post-title-link" href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/APIC%E4%B8%AD%E6%96%AD%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url">APIC中断虚拟化</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
+                    <span itemprop="name">kvm相关基本机制</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          虚拟化的挑战：[[Linux中断处理]]guest操作系统不知道自己运行在虚拟机里。他会像在物理机上一样，频繁读写CR8来管理中断。在早期的虚拟化中，每一次对CR8的访问都会导致VM-Exit，CPU控制权交还给KVM，KVM再去模拟对vAPIC的访问。这个开销是极其巨大的。
+KVM虚拟APIC的两种模式KVM提供了两种APIC虚拟化
+模式一： 用户空间模拟（Split IRQChip）这是古老、慢但兼容性最好的模式。
+
+工作方式： KVM 内核模块只负责最基础的evCPU运行，而将整个APIC的模拟工作（LAPIC和IO-APIC）外包给用户空间的QEMU。
+!lapic_in_kernel
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/APIC%E4%B8%AD%E6%96%AD%E8%99%9A%E6%8B%9F%E5%8C%96/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" itemprop="url">kvm_main.c学习记录</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          
+首先在全局入口处的 kvm_init 对每个cpu都尝试获得了专属的变量地址
+
+1234567	    for_each_possible_cpu(cpu) &#123;        if (!alloc_cpumask_var_node(&amp;per_cpu(cpu_kick_mask, cpu),                        GFP_KERNEL, cpu_to_node(cpu))) &#123;            r = -ENOMEM;            goto err_cpu_kick_mask;        &#125;    &#125;	
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_main.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/" itemprop="url">KVM_ioctl学习日记</a></h1>
         
 
         <div class="post-meta">
@@ -363,7 +689,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/#more" rel="contents">
+            <a class="btn" href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/KVM_ioctl%E5%AD%A6%E4%B9%A0%E6%97%A5%E8%AE%B0/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -414,7 +740,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -433,7 +759,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url">kvm_enter_guest学习笔记</a></h1>
+                <a class="post-title-link" href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url">kvm_enter_guest学习笔记</a></h1>
         
 
         <div class="post-meta">
@@ -519,7 +845,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/#more" rel="contents">
+            <a class="btn" href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm_enter_guest%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -570,7 +896,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2024/11/19/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2024/11/19/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -589,7 +915,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2024/11/19/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/" itemprop="url">vmx_vcpu_enter_exit</a></h1>
+                <a class="post-title-link" href="/2024/11/19/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/" itemprop="url">vmx_vcpu_enter_exit</a></h1>
         
 
         <div class="post-meta">
@@ -667,7 +993,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
           
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2024/11/19/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/#more" rel="contents">
+            <a class="btn" href="/2024/11/19/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_vcpu_enter_exit/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -755,7 +1081,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-count">35</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -777,7 +1103,7 @@ kvm_dev_ioctl_create_vm(unsigned long type)
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

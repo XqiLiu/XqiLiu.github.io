@@ -259,7 +259,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/24/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/25/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/vhost%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -278,7 +278,341 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/24/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/" itemprop="url">virtnet网络包发包</a></h1>
+                <a class="post-title-link" href="/2025/11/25/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/vhost%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/" itemprop="url">vhost基本概念</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-25T15:52:45+08:00">
+                2025-11-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/KVM/vhost/" itemprop="url" rel="index">
+                    <span itemprop="name">vhost</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          virtio-net可以认为是Virtio协议中的前端实现；vhost则是协议中的后端实现。vhost-net运行在Host端（无论是内核态还是用户态）。
+vhost的核心价值在vhost之前，也是存在Virtio的后端设计的，即QEMU Virtio。
+
+QEMU：数据包从Guest-&gt; KVM(trap)-&gt;QEMU（用户态）-&gt;写入Tap设备-&gt;内核。路径太长，上下文切换太多。
+vhost-net：进行了控制面与数据面的分离
+控制面：QEMU同样负责初始化设备，分配内存，通过ioctl告诉内核vhost驱动Guest的内存布局和VRing地址。之后就将相关任务交付
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2025/11/25/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/vhost%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/XDP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/XDP/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-24T20:54:57+08:00">
+                2025-11-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux内核基础</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/" itemprop="url" rel="index">
+                    <span itemprop="name">内核原理</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          
+          
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/XDP/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/" itemprop="url">virtnet网络包发包</a></h1>
         
 
         <div class="post-meta">
@@ -369,7 +703,7 @@
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/24/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/#more" rel="contents">
+            <a class="btn" href="/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%BD%91%E7%BB%9C%E5%8C%85%E5%8F%91%E5%8C%85/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -420,7 +754,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/24/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/Virtnet%E6%94%B6%E5%8C%85%E8%BF%87%E7%A8%8B/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/Virtnet%E6%94%B6%E5%8C%85%E8%BF%87%E7%A8%8B/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -439,7 +773,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/24/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/Virtnet%E6%94%B6%E5%8C%85%E8%BF%87%E7%A8%8B/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/Virtnet%E6%94%B6%E5%8C%85%E8%BF%87%E7%A8%8B/" itemprop="url">Untitled</a></h1>
         
 
         <div class="post-meta">
@@ -474,8 +808,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
                   </a>
                 </span>
 
@@ -485,7 +819,7 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/" itemprop="url" rel="index">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/" itemprop="url" rel="index">
                     <span itemprop="name">VirtIO</span>
                   </a>
                 </span>
@@ -496,7 +830,7 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/" itemprop="url" rel="index">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/" itemprop="url" rel="index">
                     <span itemprop="name">virtio-net</span>
                   </a>
                 </span>
@@ -548,7 +882,7 @@ Refill收包过程中有一个比较反直觉的逻辑：虽然Guest是被动接
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/24/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/Virtnet%E6%94%B6%E5%8C%85%E8%BF%87%E7%A8%8B/#more" rel="contents">
+            <a class="btn" href="/2025/11/24/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/Virtnet%E6%94%B6%E5%8C%85%E8%BF%87%E7%A8%8B/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -599,7 +933,7 @@ Refill收包过程中有一个比较反直觉的逻辑：虽然Guest是被动接
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E4%B8%AD%E9%87%8D%E8%A6%81%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E4%B8%AD%E9%87%8D%E8%A6%81%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -618,7 +952,7 @@ Refill收包过程中有一个比较反直觉的逻辑：虽然Guest是被动接
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E4%B8%AD%E9%87%8D%E8%A6%81%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E4%B8%AD%E9%87%8D%E8%A6%81%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93/" itemprop="url">Untitled</a></h1>
         
 
         <div class="post-meta">
@@ -653,8 +987,8 @@ Refill收包过程中有一个比较反直觉的逻辑：虽然Guest是被动接
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
                   </a>
                 </span>
 
@@ -664,7 +998,7 @@ Refill收包过程中有一个比较反直觉的逻辑：虽然Guest是被动接
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/" itemprop="url" rel="index">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/" itemprop="url" rel="index">
                     <span itemprop="name">VirtIO</span>
                   </a>
                 </span>
@@ -675,7 +1009,7 @@ Refill收包过程中有一个比较反直觉的逻辑：虽然Guest是被动接
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/" itemprop="url" rel="index">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/" itemprop="url" rel="index">
                     <span itemprop="name">virtio-net</span>
                   </a>
                 </span>
@@ -723,7 +1057,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E4%B8%AD%E9%87%8D%E8%A6%81%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93/#more" rel="contents">
+            <a class="btn" href="/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E4%B8%AD%E9%87%8D%E8%A6%81%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -774,7 +1108,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%B7%A5%E4%BD%9C/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%B7%A5%E4%BD%9C/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -793,7 +1127,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%B7%A5%E4%BD%9C/" itemprop="url">virtnet的初始化工作</a></h1>
+                <a class="post-title-link" href="/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%B7%A5%E4%BD%9C/" itemprop="url">virtnet的初始化工作</a></h1>
         
 
         <div class="post-meta">
@@ -883,7 +1217,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%B7%A5%E4%BD%9C/#more" rel="contents">
+            <a class="btn" href="/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%B7%A5%E4%BD%9C/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -934,7 +1268,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%89%B9%E6%80%A7%E4%BD%8Dfeature%20bit/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%89%B9%E6%80%A7%E4%BD%8Dfeature%20bit/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -953,7 +1287,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%89%B9%E6%80%A7%E4%BD%8Dfeature%20bit/" itemprop="url">virtnet特性位feature bit</a></h1>
+                <a class="post-title-link" href="/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%89%B9%E6%80%A7%E4%BD%8Dfeature%20bit/" itemprop="url">virtnet特性位feature bit</a></h1>
         
 
         <div class="post-meta">
@@ -1046,7 +1380,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/22/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%89%B9%E6%80%A7%E4%BD%8Dfeature%20bit/#more" rel="contents">
+            <a class="btn" href="/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%89%B9%E6%80%A7%E4%BD%8Dfeature%20bit/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1097,7 +1431,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/21/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/NAPI/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/21/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/NAPI/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -1116,7 +1450,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/21/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/NAPI/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2025/11/21/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/NAPI/" itemprop="url">Untitled</a></h1>
         
 
         <div class="post-meta">
@@ -1151,8 +1485,8 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
                   </a>
                 </span>
 
@@ -1162,7 +1496,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
                     <span itemprop="name">Linux内核基础</span>
                   </a>
                 </span>
@@ -1173,7 +1507,7 @@ Linux内核当他申请一块内存存网络包的时，会在真正的数据开
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/" itemprop="url" rel="index">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/" itemprop="url" rel="index">
                     <span itemprop="name">内核原理</span>
                   </a>
                 </span>
@@ -1226,7 +1560,7 @@ NAPI的解决方案是中断+轮询：
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/21/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/NAPI/#more" rel="contents">
+            <a class="btn" href="/2025/11/21/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/NAPI/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1277,7 +1611,7 @@ NAPI的解决方案是中断+轮询：
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/17/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/17/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -1296,7 +1630,7 @@ NAPI的解决方案是中断+轮询：
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/17/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/" itemprop="url">virtqueue</a></h1>
+                <a class="post-title-link" href="/2025/11/17/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/" itemprop="url">virtqueue</a></h1>
         
 
         <div class="post-meta">
@@ -1381,7 +1715,7 @@ virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/17/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/#more" rel="contents">
+            <a class="btn" href="/2025/11/17/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1432,7 +1766,7 @@ virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/EPT/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/05/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/EPT/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -1451,7 +1785,7 @@ virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/EPT/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2025/11/05/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/EPT/" itemprop="url">Untitled</a></h1>
         
 
         <div class="post-meta">
@@ -1486,8 +1820,8 @@ virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
                   </a>
                 </span>
 
@@ -1497,7 +1831,7 @@ virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
                     <span itemprop="name">KVM</span>
                   </a>
                 </span>
@@ -1508,7 +1842,7 @@ virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
                     <span itemprop="name">kvm相关基本机制</span>
                   </a>
                 </span>
@@ -1551,339 +1885,7 @@ virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。
           
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/EPT/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_handle_exit%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_handle_exit%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" itemprop="url">vmx_handle_exit学习记录</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-05T11:18:56+08:00">
-                2025-11-05
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          vmx_handle_exit的内部逻辑是__vmx_handle_exit。他是相当于一个总分发室。负责处理vmx-&gt;exit_reason
-进行PML缓冲区刷新12if (enable_pml &amp;&amp; !is_guest_mode(vcpu))	vmx_flush_pml_buffer(vcpu);
-
-PML是Intel EPT里的一个硬件功能，它能自动记录Guest到底写了那些内存页
-CPU会把这些脏页记录缓冲在自己内部，如果刚从Guest中退出，缓冲区里可能还有没同步到内存的数据。
-这个操作会让QEMU用户空间调用KVM_GET_DIRTY_LOG时，能够立即拿到新
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/05/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_handle_exit%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/SRCU/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/SRCU/" itemprop="url">SRCU</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
-                2025-11-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">KVM学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
-                    <span itemprop="name">Linux内核基础</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/" itemprop="url" rel="index">
-                    <span itemprop="name">内核原理</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          
-同步机制SRCU机制 SRCU (Sleepable Read-Copy-Update) 是一种允许“读者”在读取共享数据时睡眠的 RCU 机制。
-经典RCU(Read-Copy-Update)是一种为“读多写少”场景优化的同步机制。它的核心思想是：
-
-读者（Reader）：读取数据时，几乎没有性能开销（不需要锁，甚至没有原子操作）。
-写者（Updater）：更新数据时，它不直接修改，而是：
-Copy：复制一份旧数据。
-Update：修改这份副本。
-Replace：用一个原子性的指针操作，将指向旧数据的指针“切换”为指向新数据。
-Wait：等待一个“宽限期”（Grace Period），确保
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/03/KVM%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/SRCU/#more" rel="contents">
+            <a class="btn" href="/2025/11/05/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/EPT/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1971,7 +1973,7 @@ Wait：等待一个“宽限期”（Grace Period），确保
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">33</span>
+                  <span class="site-state-item-count">35</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1993,7 +1995,7 @@ Wait：等待一个“宽限期”（Grace Period），确保
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

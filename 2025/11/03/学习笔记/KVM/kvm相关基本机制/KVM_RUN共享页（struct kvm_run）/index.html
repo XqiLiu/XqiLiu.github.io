@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="简介该结构体本质上是KVM内核模块与用户空间VMM（如QEMU）之间进行高速、低延迟通信的共享内存区域。  QEMU (用户空间)：在公告板上写下 “请开始运行，顺便，这是你（vCPU）需要更新的寄存器信息”（例如设置 kvm_dirty_regs）。  KVM (内核空间)：接管 vCPU，开始运行。  vCPU (客户机)：运行…直到遇到一个它自己无法处理的事情（如 I&#x2F;O 操作），">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KVM_RUN共享页（struct kvm_run">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/KVM_RUN%E5%85%B1%E4%BA%AB%E9%A1%B5%EF%BC%88struct%20kvm_run%EF%BC%89/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="简介该结构体本质上是KVM内核模块与用户空间VMM（如QEMU）之间进行高速、低延迟通信的共享内存区域。  QEMU (用户空间)：在公告板上写下 “请开始运行，顺便，这是你（vCPU）需要更新的寄存器信息”（例如设置 kvm_dirty_regs）。  KVM (内核空间)：接管 vCPU，开始运行。  vCPU (客户机)：运行…直到遇到一个它自己无法处理的事情（如 I&#x2F;O 操作），">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-03T09:11:19.956Z">
+<meta property="article:modified_time" content="2025-11-19T07:42:08.347Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/学习笔记/KVM/kvm相关基本机制/KVM_RUN共享页（struct kvm_run）/"/>
+
+
+
+
+
+  <title>KVM_RUN共享页（struct kvm_run | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/KVM_RUN%E5%85%B1%E4%BA%AB%E9%A1%B5%EF%BC%88struct%20kvm_run%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">KVM_RUN共享页（struct kvm_run</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/" itemprop="url" rel="index">
+                    <span itemprop="name">KVM</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/" itemprop="url" rel="index">
+                    <span itemprop="name">kvm相关基本机制</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>该结构体本质上是<strong>KVM内核模块</strong>与<strong>用户空间VMM</strong>（如QEMU）之间进行高速、低延迟通信的共享内存区域。</p>
+<ul>
+<li><p><strong>QEMU (用户空间)</strong>：在公告板上写下 “请开始运行，顺便，这是你（vCPU）需要更新的寄存器信息”（例如设置 <code>kvm_dirty_regs</code>）。</p>
+</li>
+<li><p><strong>KVM (内核空间)</strong>：接管 vCPU，开始运行。</p>
+</li>
+<li><p><strong>vCPU (客户机)</strong>：运行…直到遇到一个它自己无法处理的事情（如 I&#x2F;O 操作），触发 <strong>VM-Exit</strong>。</p>
+</li>
+<li><p><strong>KVM (内核空间)</strong>：捕获 VM-Exit，暂停 vCPU，然后在公告板上写下 “运行暂停！原因：“I&#x2F;O 操作”，详情：“端口 0x3f8, 写入数据 ‘A’”。</p>
+</li>
+<li><p><strong>QEMU (用户空间)</strong>：<code>KVM_RUN</code> 调用返回，QEMU 立刻查看公告板，”哦，原来是 I&#x2F;O。我来模拟一下向 0x3f8 端口写 ‘A’”。</p>
+</li>
+<li><p>模拟完成后，QEMU 擦掉公告板，再次调用 <code>KVM_RUN</code>，循环往复。</p>
+</li>
+</ul>
+<h1 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h1><p>虚拟化环境中， [[VM-Exit]]发生的极其频繁（每秒成千上万次频率）。VM-Exit意味着控制权从Guest交还给Host。<br>如果每次VM-Exit，用户空间的QEMU都需要通过<code>read()</code>&#x2F;<code>write()</code>等系统调用来从内核获取vCPU退出的原因和数据，将会产生巨大开销。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>核心机制是<code>mmap()</code>系统调用和<code>struct kvm_run</code>结构体。<br>1 .建立共享：<code>mmap()</code></p>
+<ol>
+<li>当 QEMU 创建一个 vCPU 时，它会通过 <code>KVM_CREATE_VCPU</code> ioctl 获得一个代表该 vCPU 的文件描述符（<code>vcpu_fd</code>）。</li>
+<li>紧接着，QEMU 会对这个 <code>vcpu_fd</code> 调用 <code>mmap()</code>。</li>
+<li>KVM 内核模块会响应这个 <code>mmap()</code>，在内核中分配一个（或多个）内存页，用于 <code>struct kvm_run</code> 结构体，并将这块<strong>物理内存</strong>映射到 QEMU 进程的<strong>虚拟地址空间</strong>中。<br><strong>结果</strong>：QEMU（用户空间）和 KVM（内核空间）同时拥有了指向<strong>同一块物理内存</strong>的指针。<br>2 .使用共享页通信<br>这块共享内存就是具体的结构体<code>kvm_run</code>，包含了vCPU运行所需要的元数据</li>
+</ol>
+<ul>
+<li><code>__u32 exit_reason</code><ul>
+<li>这是最重要的字段，内核用它来告诉QEMU为什么vCPU停止运行了（例如 <code>KVM_EXIT_IO</code>, <code>KVM_EXIT_MMIO</code>, <code>KVM_EXIT_INTR</code>）。</li>
+<li>一个巨大的<code>union</code>结构：<ul>
+<li><ul>
+<li>这个联合体根据 <code>exit_reason</code> 的不同而有不同的含义，实现了内存的复用。</li>
+</ul>
+</li>
+<li><code>struct kvm_io io;</code>：如果 <code>exit_reason</code> 是 <code>KVM_EXIT_IO</code>，这个结构里会包含 I&#x2F;O 端口、数据大小、读写方向等。</li>
+<li><code>struct kvm_mmio mmio;</code>：如果 <code>exit_reason</code> 是 <code>KVM_EXIT_MMIO</code>，这里会包含 MMIO 的物理地址、数据、长度等。</li>
+<li><code>struct kvm_exception ex;</code>：用于注入异常。</li>
+<li>… 以及其他各种退出原因的结构体。</li>
+</ul>
+</li>
+<li><code>__u64 cr8</code><ul>
+<li>这是在QEMU调用KVM_RUN之前，用来传入数据给内核的例子，告诉内核vCPU的中断优先级（[[APIC中断虚拟化]]）应该是多少。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="总结：KVM-RUN-的完整生命周期"><a href="#总结：KVM-RUN-的完整生命周期" class="headerlink" title="总结：KVM_RUN 的完整生命周期"></a>总结：KVM_RUN 的完整生命周期</h1><ol>
+<li><strong>QEMU (写者)</strong>：在调用 <code>KVM_RUN</code> 之前，向 <code>kvm_run</code> 共享页写入“请求”数据（如 <code>kvm_dirty_regs</code>, <code>cr8</code>）。</li>
+<li><strong>QEMU (调用者)</strong>：调用 <code>ioctl(vcpu_fd, KVM_RUN, ...)</code>，线程在内核中阻塞。</li>
+<li><strong>KVM (读者)</strong>：在 <code>kvm_arch_vcpu_ioctl_run</code> 中，读取 <code>kvm_run</code> 共享页中的“请求”（如 <code>sync_regs(vcpu)</code>，<code>kvm_set_cr8(...)</code>）。</li>
+<li><strong>KVM (运行者)</strong>：调用 <code>vcpu_run()</code>，进入 Guest 模式，vCPU 开始执行指令。</li>
+<li><strong>(VM-Exit)</strong>：Guest 执行敏感操作，触发 VM-Exit，返回到 KVM。</li>
+<li><strong>KVM (写者)</strong>：将 <code>exit_reason</code> 和退出数据（如 <code>kvm_run-&gt;io</code>）填入<strong>同一个</strong> <code>kvm_run</code> 共享页。</li>
+<li><strong>KVM (返回者)</strong>：<code>ioctl</code> 调用返回，QEMU 线程被唤醒。</li>
+<li><strong>QEMU (读者)</strong>：立即查看 <code>kvm_run</code> 共享页，读取 <code>exit_reason</code>，模拟硬件操作。</li>
+<li><strong>循环</strong>：QEMU 处理完毕，回到第 1 步，再次调用 <code>KVM_RUN</code>。</li>
+</ol>
+<p>这个<strong>零拷贝</strong>（Zero-Copy）的共享内存机制，是 KVM 能够实现高性能虚拟化的基石。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/IRQ%20Window%20Exit/" rel="next" title="IRQ Window Exit">
+                <i class="fa fa-chevron-left"></i> IRQ Window Exit
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/kvm%E4%BF%A1%E5%8F%B7%E4%B8%8E%E9%98%BB%E5%A1%9E%E6%9C%BA%E5%88%B6/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%9C%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">作用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9AKVM-RUN-%E7%9A%84%E5%AE%8C%E6%95%B4%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">4.</span> <span class="nav-text">总结：KVM_RUN 的完整生命周期</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

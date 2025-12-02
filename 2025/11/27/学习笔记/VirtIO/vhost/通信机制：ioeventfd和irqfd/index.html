@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="virtio,VM-Exit," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述： Guest对Host的Kick：Guest发包了，写一个寄存器，触发VMExit，KVM捕捉到后，通过ioeventfd直接唤醒内核里的vhost线程。 Host-&gt;Guest的Call流程：vhost线程收包完成，通过irqfd注入一个中断给Guest。  Qemu 分配一个eventfd并将其注册到 vhost 和 KVM，以实现通知绕过。vhost 的 $pid 内核线程会轮询">
+<meta property="og:type" content="article">
+<meta property="og:title" content="vhost的通信机制：ioeventfd和irqfd">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/27/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/%E9%80%9A%E4%BF%A1%E6%9C%BA%E5%88%B6%EF%BC%9Aioeventfd%E5%92%8Cirqfd/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="概述： Guest对Host的Kick：Guest发包了，写一个寄存器，触发VMExit，KVM捕捉到后，通过ioeventfd直接唤醒内核里的vhost线程。 Host-&gt;Guest的Call流程：vhost线程收包完成，通过irqfd注入一个中断给Guest。  Qemu 分配一个eventfd并将其注册到 vhost 和 KVM，以实现通知绕过。vhost 的 $pid 内核线程会轮询">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-27T07:53:20.588Z">
+<meta property="article:modified_time" content="2025-11-27T08:03:58.821Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="VM-Exit">
+<meta property="article:tag" content="virtio">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/27/学习笔记/VirtIO/vhost/通信机制：ioeventfd和irqfd/"/>
+
+
+
+
+
+  <title>vhost的通信机制：ioeventfd和irqfd | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/27/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/%E9%80%9A%E4%BF%A1%E6%9C%BA%E5%88%B6%EF%BC%9Aioeventfd%E5%92%8Cirqfd/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">vhost的通信机制：ioeventfd和irqfd</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-27T15:53:20+08:00">
+                2025-11-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/VirtIO/" itemprop="url" rel="index">
+                    <span itemprop="name">VirtIO</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/VirtIO/vhost/" itemprop="url" rel="index">
+                    <span itemprop="name">vhost</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="概述："><a href="#概述：" class="headerlink" title="概述："></a>概述：</h1><ul>
+<li>Guest对Host的Kick：Guest发包了，写一个寄存器，触发VMExit，KVM捕捉到后，通过<code>ioeventfd</code>直接唤醒内核里的vhost线程。</li>
+<li>Host-&gt;Guest的Call流程：vhost线程收包完成，通过<code>irqfd</code>注入一个中断给Guest。</li>
+</ul>
+<p>Qemu 分配一个<code>eventfd</code>并将其注册到 vhost 和 KVM，以实现通知绕过。vhost 的 $pid 内核线程会轮询该 <code>eventfd</code>，当客户机写入特定地址时，KVM 会向其中写入数据。此机制称为 <strong>ioeventfd</strong>。<br>这样，对特定客户机内存地址的简单读&#x2F;写操作无需经过耗时的 QEMU 进程唤醒，可以直接路由到 vhost 工作线程。此外，它还具有异步的优势，无需停止 vCPU（因此无需立即进行上下文切换）。</p>
+<p>另一方面，qemu 会分配另一个 <code>eventfd</code>，并将其注册到 KVM 和 vhost，以便直接注入 vCPU 中断。这种机制称为<strong>irqfd</strong>，<br>它允许宿主机中的任何进程通过写入该 <code>eventfd</code> 向虚拟机注入 vCPU 中断，并具有相同的优势（异步、无需立即切换上下文等）。</p>
+<h1 id="对比："><a href="#对比：" class="headerlink" title="对比："></a>对比：</h1><ul>
+<li><strong>ioeventfd</strong>可以看作是KVM在监听Guest写内存</li>
+<li><strong>irqfd</strong>则是KVM在通过另一个<code>eventfd</code>得知vhost或其他Host线程处理完数据后写<code>eventfd</code>时，主动查到对应中断绑定表，执行<strong>注入中断</strong>。[[注入中断]]</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>ioeventfd</th>
+<th>irqfd</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>方向</strong></td>
+<td><strong>Guest $\rightarrow$ Host</strong> (Kick)</td>
+<td>Host-&gt;Guest(interrupt)</td>
+</tr>
+<tr>
+<td><strong>目的</strong></td>
+<td>通知Host：“已有数据，去读取”</td>
+<td>通知Guest：“已有数据，去读取”或者“数据处理完了，回收内存”</td>
+</tr>
+<tr>
+<td><strong>触发者</strong></td>
+<td>Guest 写 <strong>PIO&#x2F;MMIO 内存地址</strong></td>
+<td>Host (vhost&#x2F;QEMU) 写 <strong>eventfd 文件</strong></td>
+</tr>
+<tr>
+<td><strong>KVM的行为</strong></td>
+<td>拦截 VM Exit $\rightarrow$ <strong>写 eventfd</strong> 唤醒 vhost</td>
+<td>监听 eventfd $\rightarrow$ 修改 VMCS <strong>注入中断</strong></td>
+</tr>
+<tr>
+<td><strong>底层核心</strong></td>
+<td><code>poll</code> &#x2F; <code>epoll</code> (等待事件)</td>
+<td><code>injection</code> (修改 CPU 执行流)</td>
+</tr>
+</tbody></table>
+<h1 id="问题："><a href="#问题：" class="headerlink" title="问题："></a>问题：</h1><p>vhost 既然在内核里，为什么不直接调用 KVM 的函数 <code>kvm_set_irq()</code> 注入中断呢？为什么要多绕一个 <code>eventfd</code>？</p>
+<p>原因有两个：</p>
+<ol>
+<li><p><strong>解耦与通用性：</strong> <code>irqfd</code> 提供了一个通用的<strong>文件接口</strong>。</p>
+<ul>
+<li><p>如果是 <strong>vhost</strong>（内核线程），它写文件。</p>
+</li>
+<li><p>如果是 <strong>QEMU</strong>（用户进程），它也可以写文件。</p>
+</li>
+<li><p>如果是 <strong>VFIO</strong>（直通设备驱动），它也可以写文件。 KVM 不需要知道谁在发中断，它只管守着这个文件描述符。这让架构非常灵活。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>异步与性能：</strong> 如果 vhost 直接调用 KVM 的函数，它可能需要获取复杂的锁（Lock），如果 vCPU 正在忙或者锁被占用，vhost 线程就会被卡住（Block）。 用 <code>irqfd</code> 的话，vhost 只需要 <code>write</code> 一下就跑，剩下的脏活累活（注入中断、等待锁、踢 vCPU）由 KVM 的工作线程异步去处理，<strong>vhost 的网络吞吐量就不会被阻塞。</strong></p>
+</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/virtio/" rel="tag"># virtio</a>
+          
+            <a href="/tags/VM-Exit/" rel="tag"># VM-Exit</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/27/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/%E6%B3%A8%E5%85%A5%E4%B8%AD%E6%96%AD/" rel="next" title="">
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/28/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/VFIO/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">概述：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9%E6%AF%94%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">对比：</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">问题：</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

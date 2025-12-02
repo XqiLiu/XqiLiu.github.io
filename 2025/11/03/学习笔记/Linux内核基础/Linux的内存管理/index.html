@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Linux,memory,NUMA," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Buddy SystemLinux目前底层的物理内存管理还是使用的伙伴系统，防止外部碎片。  工作原理： 将内存按$2^n$个页面（Pages）的大小进行分组（Order 0 到Order 11，即1到1024页） 当申请1个页时，查看Order 0链表。 申请4个页时，查看Order 2链表。 如果目标链表为空，会向高阶链表借一块，将其一分为二，一块用于提供给分配申请，一块存入低阶链表。 释放时">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux的内存管理">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Buddy SystemLinux目前底层的物理内存管理还是使用的伙伴系统，防止外部碎片。  工作原理： 将内存按$2^n$个页面（Pages）的大小进行分组（Order 0 到Order 11，即1到1024页） 当申请1个页时，查看Order 0链表。 申请4个页时，查看Order 2链表。 如果目标链表为空，会向高阶链表借一块，将其一分为二，一块用于提供给分配申请，一块存入低阶链表。 释放时">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-03T09:11:19.967Z">
+<meta property="article:modified_time" content="2025-12-01T09:44:35.334Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="NUMA">
+<meta property="article:tag" content="memory">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/学习笔记/Linux内核基础/Linux的内存管理/"/>
+
+
+
+
+
+  <title>Linux的内存管理 | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux的内存管理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
+                2025-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux内核基础</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Buddy-System"><a href="#Buddy-System" class="headerlink" title="Buddy System"></a>Buddy System</h1><p>Linux目前底层的物理内存管理还是使用的<strong>伙伴系统</strong>，防止<strong>外部碎片</strong>。</p>
+<ul>
+<li>工作原理：<ul>
+<li>将内存按$2^n$个页面（Pages）的大小进行分组（Order 0 到Order 11，即1到1024页）<ul>
+<li>当申请1个页时，查看Order 0链表。</li>
+<li>申请4个页时，查看Order 2链表。</li>
+<li>如果目标链表为空，会向高阶链表借一块，将其一分为二，一块用于提供给分配申请，一块存入低阶链表。</li>
+<li>释放时，它会检查物理地址连续的伙伴空间是否空闲，如果空闲则合并成更大的块。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="Slab分配器"><a href="#Slab分配器" class="headerlink" title="Slab分配器"></a>Slab分配器</h1><p>如果一个很小字节来存放一个结构体，就找Buddy系统要4KB内存页，太过于浪费（内部碎片），所以引入了第二层管理：<strong>Slab分配器</strong>。</p>
+<ul>
+<li><p>职责：从Buddy System申请整页内存，切碎后提供给内核其它模块。</p>
+</li>
+<li><p>目前现状：</p>
+<ul>
+<li><strong>Slab</strong>：最早的实现，机制复杂，元数据开销大</li>
+<li><strong>Slub</strong>：现在的默认实现。是Slab的改进版本，去掉了复杂的队列管理，性能更好，对CPU缓存更友好。目前大多数的服务器发行版默认使用Slub。</li>
+<li><strong>Slob</strong>：嵌入式系统下的极简版。<br>在传统的Slab哲学，初始化一个对象的可能比分配内存更贵：</li>
+</ul>
+</li>
+<li><p>slab释放内存时，并不一定把内存还给Buddy，而是把它标记为“空闲”，但保持其初始化状态。下次再申请时，直接用从而省去了初始化开销。（现代Slub实现中为了性能简化了这一步）</p>
+</li>
+<li><p><strong>Slub (The Unqueued Slab)</strong>：<strong>现在的默认设置</strong>（绝大多数发行版都在用）。</p>
+<ul>
+<li>它最大的改进是<strong>去掉了复杂的队列管理</strong>。</li>
+<li><strong>复用 <code>struct page</code></strong>：Slub 非常激进地复用了 <code>struct page</code> 结构体中的字段来做链表指针（freelist），大大减少了额外的元数据开销。这是非常硬核的优化。</li>
+</ul>
+</li>
+<li><p><strong>kmalloc</strong>的实现</p>
+<ul>
+<li><code>kmalloc</code>并不是基于Buddy的，而是基于Slub的。</li>
+<li>内核预先创建了一系列通用的Slab Cache，大小以此类推<code>kmalloc-8</code>, <code>kmalloc-16</code>, <code>kmalloc-32</code> … <code>kmalloc-1024</code>。</li>
+<li>当调配用了<code>kmalloc(50)</code>，内核会找最近的<code>kmalloc-64</code> 的池子挖一块分配。这只会有较小的浪费。</li>
+</ul>
+</li>
+</ul>
+<h1 id="NUMA"><a href="#NUMA" class="headerlink" title="NUMA"></a>NUMA</h1><h2 id="UMA"><a href="#UMA" class="headerlink" title="UMA"></a>UMA</h2><p>在早期的SMP时代，所有的CPU通过一条总线访问同一块内存（Uniform Memory Access）<br>随着CPU核心越来越多，共享的内存总线带宽不够。解决办法就是采用<strong>分治</strong>的策略：</p>
+<ul>
+<li>内存切分，分给不同的CPU插槽（Socket）</li>
+<li>CPU访问自己插槽的内存（Local Access）极快，访问隔壁插槽（Remote Access）较慢，这就是<strong>NUMA</strong>。</li>
+</ul>
+<h2 id="Linux内核中的NUMA抽象：Node"><a href="#Linux内核中的NUMA抽象：Node" class="headerlink" title="Linux内核中的NUMA抽象：Node"></a>Linux内核中的NUMA抽象：Node</h2><ul>
+<li><strong>物理概念映射</strong>：Linux将CPU和其直连的内存条组成一个逻辑单元，称为Node。</li>
+<li><strong>核心结构体</strong>：<code>struct pglist_data</code>（简称为<code>pgdat</code>）<ul>
+<li>在UMA时代，全系统只有一个<code>pgdat</code>队列。</li>
+<li>NUMA时代，系统有<code>N</code>个<code>pgdat</code>队列，通过链表连在一起。</li>
+</ul>
+</li>
+<li>NUMA是比<code>Buddy System</code>更高的层级：<br>Node(pgdat)-&gt;Zones(DMA)-&gt;Buddy(Free Lists)-&gt;Page<ul>
+<li>上一章所提到的Buddy系统，其实是存在每一个Node里的。每个Node都有自己独立的Buddy System链表和锁。这意味着CPU A申请本地内存时，不需要竞争CPU B的锁，提高了并行性。</li>
+</ul>
+</li>
+</ul>
+<h2 id="内存分配策略"><a href="#内存分配策略" class="headerlink" title="内存分配策略"></a>内存分配策略</h2><p>这是内核决策的部分。当一个进程申请<code>malloc</code>时，内核该去哪个Node拿内存。</p>
+<ul>
+<li><strong>Default（默认策略）</strong>：Local Allocation<ul>
+<li>CPU在所处的Node上运行，就在该Node的Buddy系统申请内存</li>
+<li>这一策略保证了访存速度,但是可能内存使用不均进而OOM或频繁Swap,即时总内存还是充足的。</li>
+</ul>
+</li>
+<li><strong>Zonelist（备用列表）</strong>：<ul>
+<li>每个Node都有一个<code>Zonelist</code>，用于规定当当前Node的内存使用完后，下一个找谁借。</li>
+<li>通常是按“距离”排序的（通过 ACPI 表获取的 SLIT 信息）。</li>
+</ul>
+</li>
+<li><strong>MPOL_BIND (绑定)</strong>：强制进程只能使用特定的 Node。</li>
+<li><strong>MPOL_INTERLEAVE (交织)</strong>：轮询分配（Page 1 在 Node 0，Page 2 在 Node 1…）。这对数据库或高带宽计算非常有用，可以利用所有内存控制器的带宽。</li>
+</ul>
+<h2 id=""><a href="#" class="headerlink" title=""></a></h2>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+            <a href="/tags/memory/" rel="tag"># memory</a>
+          
+            <a href="/tags/NUMA/" rel="tag"># NUMA</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/Linux%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86/" rel="next" title="Linux中断处理">
+                <i class="fa fa-chevron-left"></i> Linux中断处理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/SMP%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Buddy-System"><span class="nav-number">1.</span> <span class="nav-text">Buddy System</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Slab%E5%88%86%E9%85%8D%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">Slab分配器</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NUMA"><span class="nav-number">3.</span> <span class="nav-text">NUMA</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#UMA"><span class="nav-number">3.1.</span> <span class="nav-text">UMA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E5%86%85%E6%A0%B8%E4%B8%AD%E7%9A%84NUMA%E6%8A%BD%E8%B1%A1%EF%BC%9ANode"><span class="nav-number">3.2.</span> <span class="nav-text">Linux内核中的NUMA抽象：Node</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5"><span class="nav-number">3.3.</span> <span class="nav-text">内存分配策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">3.4.</span> <span class="nav-text"></span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

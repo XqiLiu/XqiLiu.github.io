@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="每个virtqueue由三个物理上连续的部分组成：  描述符表（Descriptor Table） 可用环（Available Ring） 已用环（Used Ring）  virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。是一个大数组，数组里的每一项是struct virtq_desc。 123456789101112struct virtq_desc &amp;#1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="virtqueue">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/17/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="每个virtqueue由三个物理上连续的部分组成：  描述符表（Descriptor Table） 可用环（Available Ring） 已用环（Used Ring）  virtiov1.0Descriptor Table描述符表是驱动程序用于设备的缓冲区。是一个大数组，数组里的每一项是struct virtq_desc。 123456789101112struct virtq_desc &amp;#1">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-17T09:46:49.379Z">
+<meta property="article:modified_time" content="2025-12-01T03:27:37.172Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/17/学习笔记/VirtIO/virtqueue/"/>
+
+
+
+
+
+  <title>virtqueue | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/17/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">virtqueue</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-17T17:46:49+08:00">
+                2025-11-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/VirtIO/" itemprop="url" rel="index">
+                    <span itemprop="name">VirtIO</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>每个virtqueue由三个物理上连续的部分组成：</p>
+<ol>
+<li>描述符表（Descriptor Table）</li>
+<li>可用环（Available Ring）</li>
+<li>已用环（Used Ring）</li>
+</ol>
+<h1 id="virtiov1-0"><a href="#virtiov1-0" class="headerlink" title="virtiov1.0"></a>virtiov1.0</h1><h2 id="Descriptor-Table"><a href="#Descriptor-Table" class="headerlink" title="Descriptor Table"></a>Descriptor Table</h2><p>描述符表是<strong>驱动程序</strong>用于设备的<strong>缓冲区</strong>。是一个大数组，数组里的每一项是<code>struct virtq_desc</code>。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">virtq_desc</span> &#123;</span> </span><br><span class="line">	<span class="comment">/* Address (guest-physical). */</span> </span><br><span class="line">	le64 addr; </span><br><span class="line">	<span class="comment">/* Length. */</span> </span><br><span class="line">	le32 len; </span><br><span class="line">	<span class="comment">/* This marks a buffer as continuing via the next field. */</span> </span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* The flags as indicated above. */</span> </span><br><span class="line">	le16 flags; </span><br><span class="line">	<span class="comment">/* Next field if flags &amp; NEXT */</span> </span><br><span class="line">	le16 next;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>addr</code>是一个物理地址，缓冲区可以通过next链接起来。每个描述符对应一个缓冲区，这个缓冲区只能是只读或只写的。但是描述符链可以有多个描述符。</li>
+<li><code>len</code>是缓冲区的长度</li>
+<li><code>flags</code><strong>非常重要</strong>，有两个关键标志位：<ul>
+<li><code>VIRTQ_DESC_F_NEXT</code> (1): 表示这个描述符“链接”到下一个描述符，形成一个“链”。 这就是实现<strong>分散-收集 (Scatter-Gather) I&#x2F;O</strong> 的方式（例如，一个网络包的“包头”和“包体”可以放在两个不同的缓冲区中，用这个标志链接起来）。</li>
+<li><code>VIRTQ_DESC_F_WRITE</code> (2): 表示这个缓冲区是“设备可写”的（如网卡<strong>接收</strong>缓冲区）。如果没设置，则缓冲区是“设备可读”的（如网卡<strong>发送</strong>缓冲区）。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Available-Ring"><a href="#Available-Ring" class="headerlink" title="Available Ring"></a>Available Ring</h2><p>可用环是<strong>驱动</strong>用来为它的设备提供可用缓冲区（链）通知的。他的结构是这个样子的：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">virtq_avail</span> &#123;</span> </span><br><span class="line"><span class="meta">#<span class="keyword">define</span> VIRTQ_AVAIL_F_NO_INTERRUPT 1 </span></span><br><span class="line">	le16 flags; </span><br><span class="line">	le16 idx; </span><br><span class="line">	le16 ring[ <span class="comment">/* Queue Size */</span> ]; </span><br><span class="line">	le16 used_event; <span class="comment">/* Only if VIRTIO_F_EVENT_IDX */</span> </span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>这里的<code>idx</code>指示驱动程序将下一个描述符条目放在环中的位置，idx从0开始增长。<br>工作流程：</p>
+<ul>
+<li>驱动在“描述符表”里准备好一个描述符（或一个描述符链）。</li>
+<li>驱动把这个链的<strong>第一个描述符的索引 (id)</strong> 写入到 <code>avail-&gt;ring[]</code> 数组中。</li>
+<li>驱动更新 <code>avail-&gt;idx</code> 计数器，让设备可以看到这个新条目。<br>所有权：驱动写入，设备读取。<br><strong>中断抑制：</strong><br><code>used_event</code>可以提供一种不可靠的通知机制，来告知设备在驱动缓冲区时不希望中断（interrupt），但由于与设备不是同步的，所以不可靠，但可以作为一种有效的优化手段。</li>
+</ul>
+<h2 id="Used-Ring"><a href="#Used-Ring" class="headerlink" title="Used Ring"></a>Used Ring</h2><p>已用环是设备在使用完缓冲区后返回缓冲区（buffers）的地方，只能被设备写，被驱动读。设计结构如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">virtq_used</span> &#123;</span> </span><br><span class="line"><span class="meta">#<span class="keyword">define</span> VIRTQ_USED_F_NO_NOTIFY 1 </span></span><br><span class="line">	le16 flags; </span><br><span class="line">	le16 idx; </span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">virtq_used_elem</span> <span class="title">ring</span>[ /* <span class="title">Queue</span> <span class="title">Size</span> */];</span> </span><br><span class="line">	le16 avail_event; <span class="comment">/* Only if VIRTIO_F_EVENT_IDX */</span> </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>工作流程：</p>
+<ul>
+<li>设备处理完一个缓冲区</li>
+<li>设备把这个缓冲链的第一个描述符的索引（id）写入到used-&gt;ring[]数组中。</li>
+<li>设备同时会写入<code>len</code>，表示它往这个缓冲区里实际写了多少字节。</li>
+<li>设备更新used-&gt;idx计数器</li>
+<li>设备向驱动发送一个中断来通知驱动。</li>
+</ul>
+<p>所有权： 设备写入，驱动读取。<br>通知抑制：<br>可以在<code>used-&gt;flags</code>中设置<code>VIRTQ_USED_F_NO_NOTIFY</code>来告诉驱动，当完成缓冲区的使用不要<strong>Kick</strong>（notify）设备。</p>
+<h2 id="Interrupt-and-Notify"><a href="#Interrupt-and-Notify" class="headerlink" title="Interrupt and Notify"></a>Interrupt and Notify</h2><p>结合上述的中断移植：<strong>Interrupt</strong>是设备到驱动的打断，<strong>Notify</strong>是驱动到设备的打断。</p>
+<ul>
+<li>Notify是在驱动的<code>avail-&gt;idx</code>更新后，告知设备有新工作</li>
+<li>Interrupt是设备在<code>used-&gt;idx</code>更新后，通知去驱动回收缓冲区。<br>所以上述中两个动作都设置了抑制特性。<br><strong><code>VIRTIO_F_EVENT_IDX</code> (进阶)：</strong> 这是一个更高级的特性 ，它启用了 <code>avail_event</code> 和 <code>used_event</code> 字段 。这允许驱动说“<em>直到</em> <code>used-&gt;idx</code> 达到 100 时才中断我”，或者设备说“<em>直到</em> <code>avail-&gt;idx</code> 达到 50 时才踢我”。 这是现代 <code>vhost</code> 实现高性能的关键。</li>
+</ul>
+<h2 id="高性能分析"><a href="#高性能分析" class="headerlink" title="高性能分析"></a>高性能分析</h2><p>Vring的高性能原因就是因为virtqueue本身是一个无锁的高性能队列。<br> Virtqueue本质上是一个SPSC模型（单生产者单消费者）<br> 对于Avail Ring来说，<strong>Guest只管“写”</strong>，<strong>Host只管“读”</strong>。他们不会同时去竞争读取同一个位置来处理任务。<br> Guest的角度来看：</p>
+<ol>
+<li>看一样上次的idx来判断写到哪里，而不需要读<code>avail-&gt;idx</code>来得知。</li>
+<li>把新请求填入idx+1的位置</li>
+<li>把idx改写，这一过程只需要维护自己ide状态，而不需要“消费”（读取<code>avail ring</code>）对方的数据</li>
+<li>通知对方，Guest通知Host往往采用<code>ioeventfd</code>[[通信机制：ioeventfd和irqfd]]</li>
+</ol>
+<p> Host的角度来看：</p>
+<ol start="5">
+<li>Host读取<code>avail-&gt;idx</code>，发现比上次自己记录的<code>last_avail_idx</code>，得知有新请求。</li>
+<li>Host根据描述符读取并处理数据</li>
+<li>处理完后，将描述符所你填入Used Ring</li>
+<li>Host更新<code>used-&gt;idx</code></li>
+<li>通知对方，Host通知Guest往往采用<code>irqfd</code></li>
+</ol>
+<h1 id="virtiov1-1"><a href="#virtiov1-1" class="headerlink" title="virtiov1.1"></a>virtiov1.1</h1><h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><ol>
+<li>avail ring是如何进行“所有权”转接给设备的。为什么不在avail ring中的内存，设备是无法读取的。<ul>
+<li><strong>所有权转移机制</strong>：<ul>
+<li>这是基于<strong>共享内存</strong>的软件协议。</li>
+<li>动作：<code>avail-&gt;idx++</code>（发布索引）。</li>
+<li>原理：<strong>发布即移交</strong>。驱动程序通过逻辑约束，保证发布后不再触碰该缓冲区，直到 Host 归还。</li>
+</ul>
+</li>
+<li><strong>实现方式</strong>：<ul>
+<li>全靠<strong>软件读写内存值</strong> + <strong>内存屏障（Memory Barrier）</strong>。</li>
+<li>内存屏障保证了“填好 Desc”发生在“发布 Avail Index”之前，确保 Host 看到索引时，数据已经是准备好的。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/05/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/kvm%E7%9B%B8%E5%85%B3%E5%9F%BA%E6%9C%AC%E6%9C%BA%E5%88%B6/EPT/" rel="next" title="">
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/21/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/NAPI/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#virtiov1-0"><span class="nav-number">1.</span> <span class="nav-text">virtiov1.0</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Descriptor-Table"><span class="nav-number">1.1.</span> <span class="nav-text">Descriptor Table</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Available-Ring"><span class="nav-number">1.2.</span> <span class="nav-text">Available Ring</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Used-Ring"><span class="nav-number">1.3.</span> <span class="nav-text">Used Ring</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Interrupt-and-Notify"><span class="nav-number">1.4.</span> <span class="nav-text">Interrupt and Notify</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AB%98%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90"><span class="nav-number">1.5.</span> <span class="nav-text">高性能分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#virtiov1-1"><span class="nav-number">2.</span> <span class="nav-text">virtiov1.1</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">3.</span> <span class="nav-text">问题</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

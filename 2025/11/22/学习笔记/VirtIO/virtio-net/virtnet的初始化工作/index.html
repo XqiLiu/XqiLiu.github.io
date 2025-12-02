@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="virtio,net," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="作为一个dirver。初始构造工作肯定是看probe。我们来看virtnet_probe的工作，probe在初期的工作是大量比对上一章节的特性位并做出设置。在此不再赘述。核心代码： 12345678910111213141516171819202122232425262728static int virtnet_probe(struct virtio_device *vdev) &#123;	er">
+<meta property="og:type" content="article">
+<meta property="og:title" content="virtnet的初始化工作">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%B7%A5%E4%BD%9C/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="作为一个dirver。初始构造工作肯定是看probe。我们来看virtnet_probe的工作，probe在初期的工作是大量比对上一章节的特性位并做出设置。在此不再赘述。核心代码： 12345678910111213141516171819202122232425262728static int virtnet_probe(struct virtio_device *vdev) &#123;	er">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-11-22T08:27:51.875Z">
+<meta property="article:modified_time" content="2025-11-24T15:00:01.039Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="net">
+<meta property="article:tag" content="virtio">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/22/学习笔记/VirtIO/virtio-net/virtnet的初始化工作/"/>
+
+
+
+
+
+  <title>virtnet的初始化工作 | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E5%B7%A5%E4%BD%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">virtnet的初始化工作</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-22T16:27:51+08:00">
+                2025-11-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/VirtIO/" itemprop="url" rel="index">
+                    <span itemprop="name">VirtIO</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/VirtIO/virtio-net/" itemprop="url" rel="index">
+                    <span itemprop="name">virtio-net</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>作为一个<code>dirver</code>。初始构造工作肯定是看<code>probe</code>。我们来看<code>virtnet_probe</code>的工作，probe在初期的工作是大量比对上一章节的特性位并做出设置。在此不再赘述。核心代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">virtnet_probe</span><span class="params">(<span class="keyword">struct</span> virtio_device *vdev)</span> &#123;</span><br><span class="line">	err = init_vqs(vi);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">init_vqs</span><span class="params">(<span class="keyword">struct</span> virtnet_info *vi)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> ret;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Allocate send &amp; receive queues */</span></span><br><span class="line">	ret = virtnet_alloc_queues(vi);</span><br><span class="line">	<span class="keyword">if</span> (ret)</span><br><span class="line">		<span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">	ret = virtnet_find_vqs(vi);</span><br><span class="line">	<span class="keyword">if</span> (ret)</span><br><span class="line">		<span class="keyword">goto</span> err_free;</span><br><span class="line"></span><br><span class="line">	cpus_read_lock();</span><br><span class="line">	virtnet_set_affinity(vi);</span><br><span class="line">	cpus_read_unlock();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">err_free:</span><br><span class="line">	virtnet_free_queues(vi);</span><br><span class="line">err:</span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="init-vqs"><a href="#init-vqs" class="headerlink" title="init_vqs"></a>init_vqs</h1><p>首先解析的就是<code>init_vqs</code>，它是用来初始化virtqueue的，也是这一套工作机制的核心。其中virtnet_alloc_queues是在软件层面进行做出的准备工作，给自己的驱动分配好NAPI [[NAPI]]和内存，并没有真正的去和Host（QEMU）去申请出共享内存（Vring）。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">virtnet_alloc_queues</span><span class="params">(<span class="keyword">struct</span> virtnet_info *vi)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> i;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (vi-&gt;has_cvq) &#123;</span><br><span class="line">		vi-&gt;ctrl = kzalloc(<span class="keyword">sizeof</span>(*vi-&gt;ctrl), GFP_KERNEL);</span><br><span class="line">	&#125; </span><br><span class="line">	vi-&gt;sq = kcalloc(vi-&gt;max_queue_pairs, <span class="keyword">sizeof</span>(*vi-&gt;sq), GFP_KERNEL);</span><br><span class="line">	vi-&gt;rq = kcalloc(vi-&gt;max_queue_pairs, <span class="keyword">sizeof</span>(*vi-&gt;rq), GFP_KERNEL);</span><br><span class="line"></span><br><span class="line">	INIT_DELAYED_WORK(&amp;vi-&gt;refill, refill_work);</span><br><span class="line">	<span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; vi-&gt;max_queue_pairs; i++) &#123;</span><br><span class="line">		vi-&gt;rq[i].pages = <span class="literal">NULL</span>;</span><br><span class="line">		netif_napi_add_weight(vi-&gt;dev, &amp;vi-&gt;rq[i].napi, virtnet_poll,</span><br><span class="line">				      napi_weight);</span><br><span class="line">		netif_napi_add_tx_weight(vi-&gt;dev, &amp;vi-&gt;sq[i].napi,</span><br><span class="line">					 virtnet_poll_tx,</span><br><span class="line">					 napi_tx ? napi_weight : <span class="number">0</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">return</span> -ENOMEM;</span><br></pre></td></tr></table></figure>
+<p>这段代码留下了核心工作，分配send_queue和receive_queue的结构体初始化，并且申请和了NAPI，为每个队列都注册了轮询机制Poll。[[virtnet网络包发包]][[Virtnet收包过程]]。<br>这里的NAPI既有rq（RX），又有sq（TX），是因为在发包的过程中也会有设备的回执，来让驱动回收内存[[virtnet网络包发包]]。在收包的过程中就是处理网卡的批量入站流量[[Virtnet收包过程]]。</p>
+<h1 id="绑定virtqueue与Guest的内存队列rx、tx"><a href="#绑定virtqueue与Guest的内存队列rx、tx" class="headerlink" title="绑定virtqueue与Guest的内存队列rx、tx"></a>绑定virtqueue与Guest的内存队列rx、tx</h1><p>第二步的核心代码就是将刚才初始化的结构体和virtqueue进行绑定：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">virtnet_find_vqs</span><span class="params">(<span class="keyword">struct</span> virtnet_info *vi)</span></span><br><span class="line">&#123;	</span><br><span class="line">	vqs_info = kcalloc(total_vqs, <span class="keyword">sizeof</span>(*vqs_info), GFP_KERNEL);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* Allocate/initialize parameters for send/receive virtqueues */</span></span><br><span class="line">	<span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; vi-&gt;max_queue_pairs; i++) &#123;</span><br><span class="line">		vqs_info[rxq2vq(i)].callback = skb_recv_done;</span><br><span class="line">		vqs_info[txq2vq(i)].callback = skb_xmit_done;</span><br><span class="line">		<span class="built_in">sprintf</span>(vi-&gt;rq[i].name, <span class="string">&quot;input.%u&quot;</span>, i);</span><br><span class="line">		<span class="built_in">sprintf</span>(vi-&gt;sq[i].name, <span class="string">&quot;output.%u&quot;</span>, i);</span><br><span class="line">		vqs_info[rxq2vq(i)].name = vi-&gt;rq[i].name;</span><br><span class="line">		vqs_info[txq2vq(i)].name = vi-&gt;sq[i].name;</span><br><span class="line">		<span class="keyword">if</span> (ctx)</span><br><span class="line">			vqs_info[rxq2vq(i)].ctx = <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	ret = virtio_find_vqs(vi-&gt;vdev, total_vqs, vqs, vqs_info, <span class="literal">NULL</span>);</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; vi-&gt;max_queue_pairs; i++) &#123;</span><br><span class="line">	vi-&gt;rq[i].vq = vqs[rxq2vq(i)];</span><br><span class="line">	vi-&gt;rq[i].min_buf_len = mergeable_min_buf_len(vi, vi-&gt;rq[i].vq);</span><br><span class="line">	vi-&gt;sq[i].vq = vqs[txq2vq(i)];</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">/* run here: ret == 0. */</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里注册了两个重要的回调函数<code>skb_recv_done</code>和<code>skb_xmit_done</code><br><code>skb_recv_done</code>（RX回调）</p>
+<ul>
+<li>当Host往RX队列里塞了数据包，并处罚中断时，这个函数就会被调用。</li>
+<li>工作内容：唤醒之前注册的NAPI（<code>virtqueue_napi_schedule</code>）。<br><code>skb_xmit_done</code> (TX 回调)</li>
+<li>当Host处理完了队列里的包，并触发中断时，这个函数会被调用。</li>
+<li>工作内容：唤醒TX NAPI，去回收内存。</li>
+</ul>
+<p>这一段代码接下来的最重要的内容就是<code>virtio_find_vqs</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">virtio_find_vqs</span><span class="params">(<span class="keyword">struct</span> virtio_device *vdev, <span class="type">unsigned</span> <span class="type">int</span> nvqs,</span></span><br><span class="line"><span class="params">		    <span class="keyword">struct</span> virtqueue *vqs[],</span></span><br><span class="line"><span class="params">		    <span class="keyword">struct</span> virtqueue_info vqs_info[],</span></span><br><span class="line"><span class="params">		    <span class="keyword">struct</span> irq_affinity *desc)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> vdev-&gt;config-&gt;find_vqs(vdev, nvqs, vqs, vqs_info, desc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这一段代码：</p>
+<ol>
+<li>Guest驱动通过了PCI总线（某些设备可能是MMIO）告诉了HOST（QEMU）：启用对应的virtqueue</li>
+<li>HOST在自己的内存空间为这些virtqueue分配资源</li>
+<li>HOST将这些队列的物理覅之映射给Guest</li>
+<li>最终底层会返回一组初始化好的struct virtquque * 指针,填入vqs数组中</li>
+</ol>
+<p>跳出该函数回到上层,接下来的for循环</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; vi-&gt;max_queue_pairs; i++) &#123;</span><br><span class="line">	vi-&gt;rq[i].vq = vqs[rxq2vq(i)];</span><br><span class="line">	vi-&gt;rq[i].min_buf_len = mergeable_min_buf_len(vi, vi-&gt;rq[i].vq);</span><br><span class="line">	vi-&gt;sq[i].vq = vqs[txq2vq(i)];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这一部分代码在将上一步填入vqs的virtqueue的指针,挂载到驱动自己的sq和rq上去。</p>
+<p>到这里为止，经过了通用网络层 (virtnet_probe)-&gt;驱动软件层 (virtnet_alloc_queues)-&gt;Virtio 协议适配层 (virtnet_find_vqs)-&gt;抽象接口层 (virtio_find_vqs)-&gt;PCI 传输策略层 (vp_find_vqs)-&gt;硬件资源实现层 (vp_find_vqs_msix)<br>根据功能协商，处理完软件层面的内存分配，申请创建好virtqueue的物理队列。建立起链接。最后向Linux内核申请具体的中断向量号，吧队列对的内存地址，分配到的中断号，通过PCI寄存器写入硬件，从而建立起了Guest和Host之间的<strong>共享内存通道（Virtqueue）</strong> 和 <strong>通知机制</strong>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/virtio/" rel="tag"># virtio</a>
+          
+            <a href="/tags/net/" rel="tag"># net</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%89%B9%E6%80%A7%E4%BD%8Dfeature%20bit/" rel="next" title="virtnet特性位feature bit">
+                <i class="fa fa-chevron-left"></i> virtnet特性位feature bit
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E4%B8%AD%E9%87%8D%E8%A6%81%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#init-vqs"><span class="nav-number">1.</span> <span class="nav-text">init_vqs</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%91%E5%AE%9Avirtqueue%E4%B8%8EGuest%E7%9A%84%E5%86%85%E5%AD%98%E9%98%9F%E5%88%97rx%E3%80%81tx"><span class="nav-number">2.</span> <span class="nav-text">绑定virtqueue与Guest的内存队列rx、tx</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

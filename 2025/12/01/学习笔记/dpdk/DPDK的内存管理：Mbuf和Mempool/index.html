@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="DPDK的内存有两个概念，ret_mbuf和对应的rte_mempool Mempool与Linux的普通内存池对比DPDK内存池的设计是高性能的核心因素之一。rte_mempool 本质上是一个 基于大页内存的、支持多核无锁访问的、固定大小的对象缓冲池。关于Linux的内存设计，可以参考[[Linux的内存管理]]。Mbuf的核心 API 不是 malloc&#x2F;free，而是：  rte_memp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="https://xqiliu.github.io/2025/12/01/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/DPDK%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%9AMbuf%E5%92%8CMempool/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="DPDK的内存有两个概念，ret_mbuf和对应的rte_mempool Mempool与Linux的普通内存池对比DPDK内存池的设计是高性能的核心因素之一。rte_mempool 本质上是一个 基于大页内存的、支持多核无锁访问的、固定大小的对象缓冲池。关于Linux的内存设计，可以参考[[Linux的内存管理]]。Mbuf的核心 API 不是 malloc&#x2F;free，而是：  rte_memp">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-12-01T08:13:42.933Z">
+<meta property="article:modified_time" content="2025-12-02T09:12:17.612Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/12/01/学习笔记/dpdk/DPDK的内存管理：Mbuf和Mempool/"/>
+
+
+
+
+
+  <title> | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/12/01/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/DPDK%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%9AMbuf%E5%92%8CMempool/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-12-01T16:13:42+08:00">
+                2025-12-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/" itemprop="url" rel="index">
+                    <span itemprop="name">dpdk</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>DPDK的内存有两个概念，<code>ret_mbuf</code>和对应的<code>rte_mempool</code></p>
+<h1 id="Mempool与Linux的普通内存池对比"><a href="#Mempool与Linux的普通内存池对比" class="headerlink" title="Mempool与Linux的普通内存池对比"></a>Mempool与Linux的普通内存池对比</h1><p>DPDK内存池的设计是高性能的核心因素之一。<br><code>rte_mempool</code> 本质上是一个 <strong>基于大页内存的、支持多核无锁访问的、固定大小的对象缓冲池</strong>。<br>关于Linux的内存设计，可以参考[[Linux的内存管理]]。<br>Mbuf的核心 API 不是 <code>malloc/free</code>，而是：</p>
+<ul>
+<li><code>rte_mempool_get()</code>: 拿一个对象（通常先从 Local Cache 拿）。</li>
+<li><code>rte_mempool_put()</code>: 还一个对象。</li>
+</ul>
+<h2 id="物理层：Hugepages-对比-4KB页"><a href="#物理层：Hugepages-对比-4KB页" class="headerlink" title="物理层：Hugepages 对比 4KB页"></a>物理层：Hugepages 对比 4KB页</h2><p>这是基础上的区别。</p>
+<ul>
+<li>普通内存采用4KB页。现在的内存动辄32GB，如果全用4KB页管理。TLB Miss概率会较高。</li>
+<li>DPDK的Mempool基于Hugepages（2MB&#x2F;1GB）。需要的页表项极少，几乎不会TLB Miss。DPDK尽量保证对象在物理内存上是连续的。</li>
+</ul>
+<h2 id="结构层：固定大小对象池-对比-堆"><a href="#结构层：固定大小对象池-对比-堆" class="headerlink" title="结构层：固定大小对象池 对比 堆"></a>结构层：固定大小对象池 对比 堆</h2><ul>
+<li>普通内存（malloc）是在Heap上分配内存。<ul>
+<li>可以申请灵活尺寸的内存空间，例如10字节，或是1MB。</li>
+<li>内存可能会变得更加碎片化。分配器需要采用算法来寻找合适的空间块，时间复杂度是不确定的。（所以实时操作系统普遍不支持动态申请内存）</li>
+</ul>
+</li>
+<li>DPDK Mempool：<ul>
+<li>这是一个<strong>对象池</strong>。意思是：创建池子时，必须指定每个元素的大小。例如每个元素都是2KB的<code>rte_mbuf</code>。</li>
+<li>分配和释放的时间复杂度都是严格为$O(1)$。不需要寻找空块，所有块都一样的，拿一个就可以。</li>
+</ul>
+</li>
+</ul>
+<h2 id="并发层：Per-Core-Cache-对比-锁竞争"><a href="#并发层：Per-Core-Cache-对比-锁竞争" class="headerlink" title="并发层：Per-Core Cache 对比 锁竞争"></a>并发层：Per-Core Cache 对比 锁竞争</h2><p>这是DPDK性能碾压<code>malloc</code>最关键的原因。</p>
+<ul>
+<li>普通内存：<ul>
+<li>当多个线程同时调用<code>malloc</code>时，为了防止同一块内存分别被两个人拿走，必须加锁。</li>
+<li>Lock Contention在多核高并发下，线程都在排队等锁，性能急剧下降。</li>
+</ul>
+</li>
+<li>DPDK Mempool：<ul>
+<li>采用Ring + Local Cache结构。</li>
+<li>Local Cache：每个CPU核心都有自己私有的一小块内存块（Lcore Cache）。分配和释放都是优先对自己的私有缓存操作，<strong>完全不需要锁</strong>。</li>
+<li>只有Local Cache空了或者满了，才回去访问公共的Ring（此时需要锁或者CAS原子操作）。</li>
+<li>绝大多数情况下，内存分配是<strong>无锁</strong>、<strong>零竞争</strong>的。</li>
+</ul>
+</li>
+</ul>
+<h2 id="硬件亲和：Cache-Alignment-Padding"><a href="#硬件亲和：Cache-Alignment-Padding" class="headerlink" title="硬件亲和：Cache Alignment &amp; Padding"></a>硬件亲和：Cache Alignment &amp; Padding</h2><ul>
+<li>普通内存：<ul>
+<li>只要地址对齐（64位的8字节对齐）就行。</li>
+<li>多核变成中常见的陷阱：可能会存在<strong>False Sharing（伪共享）</strong>。如果两个变量太近，处于同一个（Cache Line）。两个不同的核心分别修改这两个相近变量，则会频繁导致对方Cache失效。</li>
+</ul>
+</li>
+<li>DPDK Mempool<ul>
+<li>强制对象首地址对齐到Cache Line（通常是64字节）的起始位置。</li>
+<li>在对象之间进行Padding，确保一个对象独占Cache Line，或者通过Channel padding让不同通道的内存分布在不同的内存通道上。</li>
+<li>这样可以确保让硬件的每一个时钟周期都在运行，确保CPU读写内存时效率最高。</li>
+</ul>
+</li>
+</ul>
+<h1 id="Mbuf结构设计"><a href="#Mbuf结构设计" class="headerlink" title="Mbuf结构设计"></a>Mbuf结构设计</h1><h2 id="为什么需要rte-mbuff来替代sk-buff？"><a href="#为什么需要rte-mbuff来替代sk-buff？" class="headerlink" title="为什么需要rte_mbuff来替代sk_buff？"></a>为什么需要rte_mbuff来替代sk_buff？</h2><p>Linux内核的<code>sk_buff</code>很强大，但太重量级了：结构体庞大、跨越多个Cache Line、频繁的内存分配与释放。<br>DPDK为此需要实现一个更轻、更<strong>紧凑</strong>、对<strong>CPU缓存更友好</strong>的数据结构。这就是Mbuf。它是DPDK数据平面的<strong>原子单位</strong>。</p>
+<p>Mbuf则是DPDK Mempool中的具体的一个单元。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">rte_mbuf</span> *<span class="title">m</span> =</span> rte_pktmbuf_alloc(my_mempool);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Mempool是负责内存的分配。解决“快不快”的问题。</li>
+<li>Mbuf负责数据的承载，解决“存什么”的问题。</li>
+</ul>
+<p>Mbuf是复用的，而不是每次都要<code>malloc</code>。</p>
+<h2 id="内存布局"><a href="#内存布局" class="headerlink" title="内存布局"></a>内存布局</h2><p>内存布的核心思想就是：<strong>移动指针永远比移动数据快</strong>。</p>
+<p>内存布局采用了三明治结构</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">graph TD</span><br><span class="line">    %% 侧边栏说明地址方向</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    %% 内存块主体</span><br><span class="line">    subgraph Memory [内存布局]</span><br><span class="line">        %% 关键修复：文本用双引号包围，防止括号解析错误</span><br><span class="line">        node1[&quot;struct rte_mbuf &lt;br/&gt; 元数据&quot;]</span><br><span class="line">        node2[&quot;Headroom &lt;br/&gt; (buf_addr 指向这里)&quot;]</span><br><span class="line">        node3[&quot;Data Payload &lt;br/&gt; 实际数据&quot;]</span><br><span class="line">        node4[&quot;Tailroom&quot;]</span><br><span class="line">        </span><br><span class="line">        %% 紧密连接</span><br><span class="line">        node1 --- node2 --- node3 --- node4</span><br><span class="line">    end</span><br><span class="line"></span><br><span class="line">    %% 指针指示</span><br><span class="line">    %% 1. 结构体指针</span><br><span class="line">    ptr_m[&quot;struct rte_mbuf *m&quot;] --&gt;|指向对象起始| node1</span><br><span class="line"></span><br><span class="line">    %% 2. 缓冲区物理/虚拟地址指针</span><br><span class="line">    ptr1[&quot;m-&gt;buf_addr&quot;] --&gt;|指向 Buffer 起始| node2</span><br><span class="line"></span><br><span class="line">    %% 3. 数据指针计算</span><br><span class="line">    ptr2[&quot;m-&gt;buf_addr + </span><br><span class="line">    m-&gt;data_off&quot;] --&gt;|计算偏移得到| node3</span><br><span class="line"></span><br><span class="line">    %% 强制左对齐关系 (通过隐藏线)</span><br><span class="line">%%     Low ~~~ node1</span><br><span class="line">  %%  High ~~~ node4 </span><br><span class="line">    </span><br><span class="line">    %% 样式美化</span><br><span class="line">    style node1 fill:#ffeded,stroke:#333</span><br><span class="line">    style node2 fill:#e8f4ff,stroke:#333</span><br><span class="line">    style node3 fill:#ffffcc,stroke:#333</span><br><span class="line">    style ptr_m fill:#fff,stroke:#333,stroke-dasharray: 5 5</span><br></pre></td></tr></table></figure>
+<p>rte_mbuf元数据 + headroom + data 都处于同一块连续的内存上。<br>为了体现出设计的目的性，这里我们依然可以与Linux下的常规设计（<code>sk_buff</code>）进行对比。</p>
+<ul>
+<li><p><strong>普通做法</strong>：<br>在普通网络编程中，要加一个头，是申请一块更大的内存，把数据拷贝过去，再在前面写上头。操作时间复杂度是$O(N)$。</p>
+</li>
+<li><p><strong>DPDK做法</strong>：<br>DPDK直接预先留出了一大片Headroom。</p>
+</li>
+<li><p>初始时<code>data_off</code>为128，即指向<code>buf_addr</code>后的128处内存空间。将之前的内存地址留为Headroom。</p>
+</li>
+<li><p><strong>Prepend</strong>：</p>
+<ul>
+<li>需要加14字节的以太网头。只需要将<code>data_off</code>减去14。这样就预留出了新空地来写入14字节的以太网头。</li>
+</ul>
+</li>
+<li><p><strong>Strip</strong>：</p>
+<ul>
+<li>需要去掉14字节的头，只需要把<code>data_off</code>加上14。就默认这块空间是空地了。<br>DPDK操作就是$O(1)$操作 ，比memcpy快很多。</li>
+</ul>
+</li>
+</ul>
+<h1 id="Cache-Line布局优化"><a href="#Cache-Line布局优化" class="headerlink" title="Cache Line布局优化"></a>Cache Line布局优化</h1><p>DPDK采用了热区冷区分区处理。将高频操作全部放在了<strong>CacheLine0</strong>内，将低频操作放在了<strong>CacheLine1</strong>内部。</p>
+<ul>
+<li><strong>Cache Line 0（热区）</strong>：<ul>
+<li>DPDK强行把关键的数据塞进前64字节里。例如当CPU来读取m-&gt;pkt_len时，CacheLine机制自动把m-&gt;port也加入进缓存，接下来读port就命中了Cache。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">	<span class="type">void</span> *buf_addr;           <span class="comment">/**&lt; Virtual address of segment buffer. */</span></span><br><span class="line">	<span class="type">rte_iova_t</span> buf_iova __rte_aligned(<span class="keyword">sizeof</span>(<span class="type">rte_iova_t</span>));</span><br><span class="line"><span class="comment">/** Input port (16 bits to support more than 256 virtual ports).</span></span><br><span class="line"><span class="comment">     * The event eth Tx adapter uses this field to specify the output port.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">	<span class="type">uint16_t</span> port;</span><br><span class="line">	<span class="type">uint32_t</span> pkt_len;         <span class="comment">/**&lt; Total pkt len: sum of all segments. */</span></span><br><span class="line">	<span class="type">uint64_t</span> ol_flags;        <span class="comment">/**&lt; Offload features. */</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>Cache Line 0（冷区）</strong>：<ul>
+<li>冷区主要是放了<code>next</code>链表指针</li>
+<li><code>next</code>指针通常是NULL，不需要读。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rte_mbuf</span> *<span class="title">next</span>;</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="特殊优化"><a href="#特殊优化" class="headerlink" title="特殊优化"></a>特殊优化</h1><h2 id="DMA优化"><a href="#DMA优化" class="headerlink" title="DMA优化"></a>DMA优化</h2><p>Mbuf中存在<code>buf_iova</code>字段</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">rte_iova_t</span> buf_iova;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>在<strong>传统发包</strong>中：<ul>
+<li>CPU操作内存使用的是<strong>虚拟地址（VA）</strong>。</li>
+<li>网卡（通过DMA）操作内存需要的是<strong>Bus Address</strong>。</li>
+<li>Linux内核协议栈中，每次发包都需要OS介入，来进行地址翻译。</li>
+</ul>
+</li>
+<li>在<strong>DPDK发包</strong>中：<ul>
+<li>该字段的值，可以用于提供给程序关于网卡的IOVA（开启IOMMU）或物理地址。从而省去了每次关于网卡的VA-&gt;PA翻译。</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2025/12/01/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/Kernel%20Bypass/" rel="next" title="">
+                <i class="fa fa-chevron-left"></i> 
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Mempool%E4%B8%8ELinux%E7%9A%84%E6%99%AE%E9%80%9A%E5%86%85%E5%AD%98%E6%B1%A0%E5%AF%B9%E6%AF%94"><span class="nav-number">1.</span> <span class="nav-text">Mempool与Linux的普通内存池对比</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E5%B1%82%EF%BC%9AHugepages-%E5%AF%B9%E6%AF%94-4KB%E9%A1%B5"><span class="nav-number">1.1.</span> <span class="nav-text">物理层：Hugepages 对比 4KB页</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E5%B1%82%EF%BC%9A%E5%9B%BA%E5%AE%9A%E5%A4%A7%E5%B0%8F%E5%AF%B9%E8%B1%A1%E6%B1%A0-%E5%AF%B9%E6%AF%94-%E5%A0%86"><span class="nav-number">1.2.</span> <span class="nav-text">结构层：固定大小对象池 对比 堆</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91%E5%B1%82%EF%BC%9APer-Core-Cache-%E5%AF%B9%E6%AF%94-%E9%94%81%E7%AB%9E%E4%BA%89"><span class="nav-number">1.3.</span> <span class="nav-text">并发层：Per-Core Cache 对比 锁竞争</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E4%BA%B2%E5%92%8C%EF%BC%9ACache-Alignment-Padding"><span class="nav-number">1.4.</span> <span class="nav-text">硬件亲和：Cache Alignment &amp; Padding</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Mbuf%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1"><span class="nav-number">2.</span> <span class="nav-text">Mbuf结构设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81rte-mbuff%E6%9D%A5%E6%9B%BF%E4%BB%A3sk-buff%EF%BC%9F"><span class="nav-number">2.1.</span> <span class="nav-text">为什么需要rte_mbuff来替代sk_buff？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80"><span class="nav-number">2.2.</span> <span class="nav-text">内存布局</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Cache-Line%E5%B8%83%E5%B1%80%E4%BC%98%E5%8C%96"><span class="nav-number">3.</span> <span class="nav-text">Cache Line布局优化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E4%BC%98%E5%8C%96"><span class="nav-number">4.</span> <span class="nav-text">特殊优化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#DMA%E4%BC%98%E5%8C%96"><span class="nav-number">4.1.</span> <span class="nav-text">DMA优化</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
