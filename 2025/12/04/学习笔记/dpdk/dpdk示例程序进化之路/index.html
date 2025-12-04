@@ -79,15 +79,15 @@
 
 
 
-<meta name="description" content="只看原理的实现，会对 DPDK 的用途不够了解。对于 DPDK 的重要设计的优越性也没有更加清晰的认识。所以需要阅读源码中提供的 example 来进一步学习，同时也可以见证 DPDK 的应用程序从基础框架走向复杂丰富的设计过程。本文的流程是如下四个经典examples：Helloword -&gt; Basicfwd -&gt; l2fwd -&gt; rxtx_callbacks -&gt;">
+<meta name="description" content="只看原理的实现，会对 DPDK 的用途不够了解。对于 DPDK 的重要设计的优越性也没有更加清晰的认识。所以需要阅读源码中提供的 example 来进一步学习，同时也可以见证 DPDK 的应用程序从基础框架走向复杂丰富的设计过程。本文的流程是如下四个经典examples：Helloword -&gt; Basicfwd -&gt; l2fwd -&gt; l3fwd Helloword：环境的接管">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
 <meta property="og:url" content="https://xqiliu.github.io/2025/12/04/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/dpdk%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E8%BF%9B%E5%8C%96%E4%B9%8B%E8%B7%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="只看原理的实现，会对 DPDK 的用途不够了解。对于 DPDK 的重要设计的优越性也没有更加清晰的认识。所以需要阅读源码中提供的 example 来进一步学习，同时也可以见证 DPDK 的应用程序从基础框架走向复杂丰富的设计过程。本文的流程是如下四个经典examples：Helloword -&gt; Basicfwd -&gt; l2fwd -&gt; rxtx_callbacks -&gt;">
+<meta property="og:description" content="只看原理的实现，会对 DPDK 的用途不够了解。对于 DPDK 的重要设计的优越性也没有更加清晰的认识。所以需要阅读源码中提供的 example 来进一步学习，同时也可以见证 DPDK 的应用程序从基础框架走向复杂丰富的设计过程。本文的流程是如下四个经典examples：Helloword -&gt; Basicfwd -&gt; l2fwd -&gt; l3fwd Helloword：环境的接管">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-12-04T07:06:25.465Z">
-<meta property="article:modified_time" content="2025-12-04T08:07:55.525Z">
+<meta property="article:modified_time" content="2025-12-04T09:16:27.850Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -367,7 +367,7 @@
       
 
       
-        <p>只看原理的实现，会对 DPDK 的用途不够了解。对于 DPDK 的重要设计的优越性也没有更加清晰的认识。所以需要阅读源码中提供的 example 来进一步学习，同时也可以见证 DPDK 的应用程序从基础框架走向复杂丰富的设计过程。<br>本文的流程是如下四个经典examples：<br><strong>Helloword</strong> -&gt; <strong>Basicfwd</strong> -&gt; <strong>l2fwd</strong> -&gt; <strong>rxtx_callbacks</strong> -&gt; <strong>l3fwd</strong></p>
+        <p>只看原理的实现，会对 DPDK 的用途不够了解。对于 DPDK 的重要设计的优越性也没有更加清晰的认识。所以需要阅读源码中提供的 example 来进一步学习，同时也可以见证 DPDK 的应用程序从基础框架走向复杂丰富的设计过程。<br>本文的流程是如下四个经典examples：<br><strong>Helloword</strong> -&gt; <strong>Basicfwd</strong> -&gt; <strong>l2fwd</strong> -&gt; <strong>l3fwd</strong></p>
 <h1 id="Helloword：环境的接管与多核启动"><a href="#Helloword：环境的接管与多核启动" class="headerlink" title="Helloword：环境的接管与多核启动"></a>Helloword：环境的接管与多核启动</h1><p>计算机的传统，任何的编程语言第一句都是Helloword。在DPDK中，打印这样的一行字要做很多事情。</p>
 <p>它的核心任务是：<strong>EAL 初始化与多核启动</strong>。</p>
 <p>普通的 C 程序是从 <code>main</code> 函数开始单线程执行的。而 DPDK 的 HelloWorld 展示了 DPDK 如何通过 <strong>EAL (Environment Abstraction Layer)</strong> 接管 Linux 的资源。</p>
@@ -407,9 +407,22 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 不再直接调用 tx_burst，而是放入 buffer</span></span><br><span class="line">rte_eth_tx_buffer(dst_port, <span class="number">0</span>, buffer, m);</span><br></pre></td></tr></table></figure>
 <p>通过<strong>软件层面的聚合</strong>，减少了与硬件交互的频率。</p>
 <ol start="2">
-<li><strong>架构优化</strong>：多核负载均衡</li>
+<li><strong>架构优化</strong>：多核负载均衡<br>Basicfwd 通常只用一个核干活。而 l2fwd 展示了如何利用多核。</li>
 </ol>
-
+<ul>
+<li>它引入了 <code>qconf</code> (Queue Configuration) 概念。</li>
+<li>在启动时，它会计算每个 CPU 核心应该负责哪些网口。</li>
+<li>这意味着吞吐量可以随着 CPU 核心数的增加而线性增长。</li>
+</ul>
+<ol start="2">
+<li><strong>业务优化</strong>：引入了二层逻辑<br>Basicfwd 只是把包从 A 扔到 B，不修改内容。l2fwd 模拟了真实的交换机行为：</li>
+</ol>
+<ul>
+<li>修改源 MAC：改为发送端口的 MAC。</li>
+<li>修改目的 MAC：改为预设的对端 MAC。</li>
+<li>定时统计：利用定时器周期性打印 PPS 和丢包率。</li>
+</ul>
+<h1 id="l3fwd"><a href="#l3fwd" class="headerlink" title="l3fwd"></a>l3fwd</h1>
       
     </div>
     
@@ -573,7 +586,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Helloword%EF%BC%9A%E7%8E%AF%E5%A2%83%E7%9A%84%E6%8E%A5%E7%AE%A1%E4%B8%8E%E5%A4%9A%E6%A0%B8%E5%90%AF%E5%8A%A8"><span class="nav-number">1.</span> <span class="nav-text">Helloword：环境的接管与多核启动</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Basicfwd%EF%BC%9A%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8F%91%E5%9F%BA%E7%A1%80"><span class="nav-number">2.</span> <span class="nav-text">Basicfwd：数据转发基础</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#l2fwd"><span class="nav-number">3.</span> <span class="nav-text">l2fwd</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Helloword%EF%BC%9A%E7%8E%AF%E5%A2%83%E7%9A%84%E6%8E%A5%E7%AE%A1%E4%B8%8E%E5%A4%9A%E6%A0%B8%E5%90%AF%E5%8A%A8"><span class="nav-number">1.</span> <span class="nav-text">Helloword：环境的接管与多核启动</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Basicfwd%EF%BC%9A%E6%95%B0%E6%8D%AE%E8%BD%AC%E5%8F%91%E5%9F%BA%E7%A1%80"><span class="nav-number">2.</span> <span class="nav-text">Basicfwd：数据转发基础</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#l2fwd"><span class="nav-number">3.</span> <span class="nav-text">l2fwd</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#l3fwd"><span class="nav-number">4.</span> <span class="nav-text">l3fwd</span></a></li></ol></div>
             
 
           </div>

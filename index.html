@@ -363,10 +363,10 @@
       
         
           
-          只看原理的实现，会对 DPDK 的用途不够了解。对于 DPDK 的重要设计的优越性也没有更加清晰的认识。所以需要阅读源码中提供的 example 来进一步学习，同时也可以见证 DPDK 的应用程序从基础框架走向复杂丰富的设计过程。本文的流程是如下四个经典examples：Helloword -&gt; Basicfwd -&gt; l2fwd -&gt; rxtx_callbacks -&gt; l3fwd
+          只看原理的实现，会对 DPDK 的用途不够了解。对于 DPDK 的重要设计的优越性也没有更加清晰的认识。所以需要阅读源码中提供的 example 来进一步学习，同时也可以见证 DPDK 的应用程序从基础框架走向复杂丰富的设计过程。本文的流程是如下四个经典examples：Helloword -&gt; Basicfwd -&gt; l2fwd -&gt; l3fwd
 Helloword：环境的接管与多核启动计算机的传统，任何的编程语言第一句都是Helloword。在DPDK中，打印这样的一行字要做很多事情。
 它的核心任务是：EAL 初始化与多核启动。
-
+普通的 C 程序是从 main 函数开始单
           ...
           <!--noindex-->
           <div class="post-button text-center">
