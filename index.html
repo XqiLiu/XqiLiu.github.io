@@ -259,6 +259,324 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/12/04/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/dpdk%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E8%BF%9B%E5%8C%96%E4%B9%8B%E8%B7%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2025/12/04/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/dpdk%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E8%BF%9B%E5%8C%96%E4%B9%8B%E8%B7%AF/" itemprop="url">Untitled</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-12-04T15:06:25+08:00">
+                2025-12-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
+                    <span itemprop="name">学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/" itemprop="url" rel="index">
+                    <span itemprop="name">dpdk</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          只看原理的实现，会对 DPDK 的用途不够了解。对于 DPDK 的重要设计的优越性也没有更加清晰的认识。所以需要阅读源码中提供的 example 来进一步学习，同时也可以见证 DPDK 的应用程序从基础框架走向复杂丰富的设计过程。本文的流程是如下四个经典examples：Helloword -&gt; Basicfwd -&gt; l2fwd -&gt; rxtx_callbacks -&gt; l3fwd
+Helloword：环境的接管与多核启动计算机的传统，任何的编程语言第一句都是Helloword。在DPDK中，打印这样的一行字要做很多事情。
+它的核心任务是：EAL 初始化与多核启动。
+
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2025/12/04/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/dpdk%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E8%BF%9B%E5%8C%96%E4%B9%8B%E8%B7%AF/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/12/02/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/DPDK%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E9%97%AE%E9%A2%98%E6%80%BB%E7%BB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2025/12/02/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/DPDK%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E9%97%AE%E9%A2%98%E6%80%BB%E7%BB%93/" itemprop="url">DPDK性能优化问题总结</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-12-02T21:14:18+08:00">
+                2025-12-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/dpdk/" itemprop="url" rel="index">
+                    <span itemprop="name">dpdk</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+          DPDK的内存性能优化
+采用了HugePages[[DPDK的内存管理：Mbuf和Mempool#物理层：Hugepages 对比 4KB页]] 
+优化点：使用 2MB 或 1GB 的内存页，而不是 4KB。
+收益：大幅减少页表项，降低 TLB Miss（转换后备缓冲器缺失）的概率。
+
+
+无锁环形队列与Per-Core Caceh[[DPDK的内存管理：Mbuf和Mempool#并发层：Per-Core Cache 对比 锁竞争]]
+优化点：将线程绑定到固定的 CPU 核心（lcore），并隔离该核心（Isolcpus）。同时Mempool 在每个核都有私有缓存。
+收益：消除了线程调度 (Co
+          ...
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2025/12/02/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/DPDK%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E9%97%AE%E9%A2%98%E6%80%BB%E7%BB%93/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/12/01/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/DPDK%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%9AMbuf%E5%92%8CMempool/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -535,7 +853,11 @@ rte_mempool_put(): 还一个对象。
 性能分析：只要数据经过内核，就需要Context Switch和内存拷贝。
 
 DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）
-          
+
+性能分析：
+DPDK通过VFIO&#x2F;UIO等方法直接接管了网卡的数据。通过DMA的方式直接得到数据而不需要copy数据（指的是不需要CPU参与的copy）
+绕过了内核协议栈到用户态程序的copy_to_user这一跨用户-内核态的数据拷贝。因为D
+          ...
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2025/12/01/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/Kernel%20Bypass/#more" rel="contents">
@@ -589,7 +911,7 @@ DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/30/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%AE%9E%E9%AA%8C/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/Libvirt%E6%8E%A5%E5%8F%A3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -608,177 +930,7 @@ DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/30/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%AE%9E%E9%AA%8C/" itemprop="url">Untitled</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-30T20:57:39+08:00">
-                2025-11-30
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/" itemprop="url" rel="index">
-                    <span itemprop="name">dpdk</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/" itemprop="url" rel="index">
-                    <span itemprop="name">vhost-user</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          
-          
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/30/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%AE%9E%E9%AA%8C/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/Libvirt%E6%8E%A5%E5%8F%A3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/Libvirt%E6%8E%A5%E5%8F%A3/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/Libvirt%E6%8E%A5%E5%8F%A3/" itemprop="url">Untitled</a></h1>
         
 
         <div class="post-meta">
@@ -835,8 +987,8 @@ DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/" itemprop="url" rel="index">
-                    <span itemprop="name">内核原理</span>
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/" itemprop="url" rel="index">
+                    <span itemprop="name">基本概念</span>
                   </a>
                 </span>
 
@@ -878,7 +1030,7 @@ DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）
           
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/Libvirt%E6%8E%A5%E5%8F%A3/#more" rel="contents">
+            <a class="btn" href="/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/Libvirt%E6%8E%A5%E5%8F%A3/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -948,7 +1100,7 @@ DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2025/11/28/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/VFIO/" itemprop="url">Untitled</a></h1>
+                <a class="post-title-link" href="/2025/11/28/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/VFIO/" itemprop="url">VFIO讲解</a></h1>
         
 
         <div class="post-meta">
@@ -983,18 +1135,7 @@ DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
+                  <a href="/categories/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
                     <span itemprop="name">Linux内核基础</span>
                   </a>
                 </span>
@@ -1506,17 +1647,6 @@ Qemu 分配一个eventfd并将其注册到 vhost 和 KVM，以实现通知绕过
 
                 
                 
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/" itemprop="url" rel="index">
-                    <span itemprop="name">内核原理</span>
-                  </a>
-                </span>
-
-                
-                
               
             </span>
           
@@ -1774,167 +1904,6 @@ Guest -&gt; virtnet -&gt; VM-Exit -&gt; KVM（处理不了IO）-&gt; QMUE（用�
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/25/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/vhost.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2025/11/25/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/vhost.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" itemprop="url">vhost.c学习记录</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-25T16:48:14+08:00">
-                2025-11-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/VirtIO/" itemprop="url" rel="index">
-                    <span itemprop="name">VirtIO</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/VirtIO/vhost/" itemprop="url" rel="index">
-                    <span itemprop="name">vhost</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-          vhost_get_vq_descvhost中很重要的一个问题就是，怎么把代码里拿到的guest地址GPA转化为一个Host能用的指针呢。关键的函数就在：
-1234int vhost_get_vq_desc(struct vhost_virtqueue *vq,		      struct iovec iov[], unsigned int iov_size,		      unsigned int *out_num, unsigned int *in_num,		      struct vhost_log *log, unsigned int *log_num)
-代码首先进行一个idx比较
-          ...
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2025/11/25/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/vhost/vhost.c%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1985,7 +1954,7 @@ Guest -&gt; virtnet -&gt; VM-Exit -&gt; KVM（处理不了IO）-&gt; QMUE（用�
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-count">36</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1996,7 +1965,7 @@ Guest -&gt; virtnet -&gt; VM-Exit -&gt; KVM（处理不了IO）-&gt; QMUE（用�
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>

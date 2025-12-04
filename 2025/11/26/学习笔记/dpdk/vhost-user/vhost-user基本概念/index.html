@@ -87,7 +87,7 @@
 <meta property="og:description" content="阅读本文，需要已经初步掌握了KVM的基本工作方、virtnet的基本工作原理、vhost的基本工作原理.vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。为了了解其性能提升方法。这里可以按照性能优化路径先分解一下： 性能优化迭代virtnet-QEMU模式：这是基本模拟的方式。路径最长，流程是：  Guest -&gt; virtnet -&gt; VM-Exit -&amp;">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-26T08:09:38.766Z">
-<meta property="article:modified_time" content="2025-11-30T13:36:15.068Z">
+<meta property="article:modified_time" content="2025-12-03T07:05:15.774Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -418,7 +418,10 @@
 <p>这里引用redhat博客<br>	<a target="_blank" rel="noopener" href="https://www.redhat.com/en/blog/journey-vhost-users-realm">https://www.redhat.com/en/blog/journey-vhost-users-realm</a><br>中的图：<br>![[redhat增强架构.png]]<br>同时在这里引入对于博客讲解的内容的理解：</p>
 <ul>
 <li>GPA的空间是Guest所感知到的物理内存，其实是HVA。所以VQ内存区域被分配时，他最终还是会在Host的物理内存某处。</li>
-<li>当DPDK的Vring物理内存地址联系上了IOVA，必须将与其关联的Guest的地址GPA一起填入进vIOMMU的TLB表中。<br>  网卡 (设备)<br>    |<br>    | 发起访问: “我要读 IOVA 0x9999”<br>    v<br>  +————-+<br>  |   vIOMMU      | &lt;— 博客那句话就在描述这里的数据填充<br>  |————-|<br>  | TLB             |<br>  | 0x9999 —-&gt; |—- 翻译成功! —-&gt; 是 GPA 0x1000<br>  +————-+<br>    |<br>    | 访问实际位置<br>    v<br>  +———————–+<br>  | Guest 物理内存 (GPA)      |<br>  | 虚拟队列 (vring)           | &lt;— 数据在这里 (地址 0x1000)<br>  +———————–+</li>
+<li>当DPDK的Vring物理内存地址联系上了IOVA，必须将与其关联的Guest的地址GPA一起填入进vIOMMU的TLB表中。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">网卡 (设备)</span><br><span class="line">         |</span><br><span class="line">         | 发起访问: &quot;我要读 IOVA 0x9999&quot;</span><br><span class="line">         v</span><br><span class="line">   +-------------+</span><br><span class="line">   |   vIOMMU      | &lt;--- 博客那句话就在描述这里的数据填充</span><br><span class="line">   |-------------|</span><br><span class="line">   | TLB             | </span><br><span class="line">   | 0x9999 ----&gt; |---- 翻译成功! ----&gt; 是 GPA 0x1000</span><br><span class="line">   +-------------+</span><br><span class="line">         |</span><br><span class="line">         | 访问实际位置</span><br><span class="line">         v</span><br><span class="line">   +-----------------------+</span><br><span class="line">   | Guest 物理内存 (GPA)      |</span><br><span class="line">   | 虚拟队列 (vring)           | &lt;--- 数据在这里 (地址 0x1000)</span><br><span class="line">   +-----------------------+</span><br></pre></td></tr></table></figure>
+<ul>
 <li>QEMU的内存管理系统能够感知GPA在其进程的HVA中的位置，所以能够转化GPA-&gt;HVA（QEMU）</li>
 <li>vhost-user库尝试访问没有对应转换的IOVA时，会通过辅助unix套接字发送IOTLB未命中消息。</li>
 <li>IOTLB API 接收请求并查找地址，首先将 IOVA 转换为 GPA，最后将 GPA 转换为 HVA。然后，它通过主 Unix Socket将转换后的地址发送回 vhost-user 库。</li>
@@ -538,7 +541,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-count">36</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -549,7 +552,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>

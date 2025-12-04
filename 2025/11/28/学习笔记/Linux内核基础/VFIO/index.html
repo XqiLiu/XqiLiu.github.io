@@ -81,13 +81,13 @@
 
 <meta name="description" content="VFIO是Linux内核中的一个驱动框架。他的目的是让用户态程序（QEMU、DPDK应用）能够安全地、直接地控制硬件设备。 在VFIO出现之前，我们通常使用UIO机制来完成，但VFIO是最现代化、最安全的方案。 VFIO的核心工作是：  向用户态暴露色背的寄存器和中断 配置IOMMU：这是关键点。VFIO负责调用IOMMU的接口，建立DMA映射表，告诉IOMMU将对应的内存段提供给设备。[[IOM">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="VFIO讲解">
 <meta property="og:url" content="https://xqiliu.github.io/2025/11/28/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/VFIO/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="VFIO是Linux内核中的一个驱动框架。他的目的是让用户态程序（QEMU、DPDK应用）能够安全地、直接地控制硬件设备。 在VFIO出现之前，我们通常使用UIO机制来完成，但VFIO是最现代化、最安全的方案。 VFIO的核心工作是：  向用户态暴露色背的寄存器和中断 配置IOMMU：这是关键点。VFIO负责调用IOMMU的接口，建立DMA映射表，告诉IOMMU将对应的内存段提供给设备。[[IOM">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-11-28T08:47:48.043Z">
-<meta property="article:modified_time" content="2025-12-02T12:59:22.246Z">
+<meta property="article:modified_time" content="2025-12-02T13:02:04.932Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -125,7 +125,7 @@
 
 
 
-  <title> | Hexo</title>
+  <title>VFIO讲解 | Hexo</title>
   
 
 
@@ -279,7 +279,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">VFIO讲解</h1>
         
 
         <div class="post-meta">
@@ -314,18 +314,7 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
+                  <a href="/categories/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
                     <span itemprop="name">Linux内核基础</span>
                   </a>
                 </span>
@@ -433,7 +422,7 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/Libvirt%E6%8E%A5%E5%8F%A3/" rel="prev" title="">
+              <a href="/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/Libvirt%E6%8E%A5%E5%8F%A3/" rel="prev" title="">
                  <i class="fa fa-chevron-right"></i>
               </a>
             
@@ -512,7 +501,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-count">36</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -523,7 +512,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>

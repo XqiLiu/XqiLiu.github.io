@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="net,Linux," />
 
 
 
@@ -79,16 +79,18 @@
 
 
 
-<meta name="description" content="同步机制SRCU机制 SRCU (Sleepable Read-Copy-Update) 是一种允许“读者”在读取共享数据时睡眠的 RCU 机制。 经典RCU(Read-Copy-Update)是一种为“读多写少”场景优化的同步机制。它的核心思想是：  读者（Reader）：读取数据时，几乎没有性能开销（不需要锁，甚至没有原子操作）。 写者（Updater）：更新数据时，它不直接修改，而是： C">
+<meta name="description" content="NAPI（New API）是Linux网络处理高吞吐量的核心软件机制。具体来说，它是 Linux 内核网络子系统中的一种数据包处理框架（New API），旨在提高高速网络环境下的处理效率。为了解决如下问题：每来一个网络包，网卡就触发一次CPU中断。 NAPI的解决方案是中断+轮询：  中断：当第一个包到来时，触发中断，通知CPU。 关闭终端：驱动程序立刻关闭该网卡的接收中断。 调度轮询：驱动指示内">
 <meta property="og:type" content="article">
-<meta property="og:title" content="SRCU">
-<meta property="og:url" content="https://xqiliu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/SRCU/index.html">
+<meta property="og:title" content="NAPI">
+<meta property="og:url" content="https://xqiliu.github.io/2025/11/21/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/NAPI/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="同步机制SRCU机制 SRCU (Sleepable Read-Copy-Update) 是一种允许“读者”在读取共享数据时睡眠的 RCU 机制。 经典RCU(Read-Copy-Update)是一种为“读多写少”场景优化的同步机制。它的核心思想是：  读者（Reader）：读取数据时，几乎没有性能开销（不需要锁，甚至没有原子操作）。 写者（Updater）：更新数据时，它不直接修改，而是： C">
+<meta property="og:description" content="NAPI（New API）是Linux网络处理高吞吐量的核心软件机制。具体来说，它是 Linux 内核网络子系统中的一种数据包处理框架（New API），旨在提高高速网络环境下的处理效率。为了解决如下问题：每来一个网络包，网卡就触发一次CPU中断。 NAPI的解决方案是中断+轮询：  中断：当第一个包到来时，触发中断，通知CPU。 关闭终端：驱动程序立刻关闭该网卡的接收中断。 调度轮询：驱动指示内">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2025-11-03T09:11:19.971Z">
-<meta property="article:modified_time" content="2025-11-19T07:41:18.813Z">
+<meta property="article:published_time" content="2025-11-21T09:03:53.641Z">
+<meta property="article:modified_time" content="2025-12-02T13:06:45.075Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="net">
 <meta name="twitter:card" content="summary">
 
 
@@ -119,13 +121,13 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/03/学习笔记/Linux内核基础/内核原理/SRCU/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/21/学习笔记/Linux内核基础/基本概念/NAPI/"/>
 
 
 
 
 
-  <title>SRCU | Hexo</title>
+  <title>NAPI | Hexo</title>
   
 
 
@@ -262,7 +264,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/SRCU/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/21/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/NAPI/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -279,7 +281,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">SRCU</h1>
+          <h1 class="post-title" itemprop="name headline">NAPI</h1>
         
 
         <div class="post-meta">
@@ -291,8 +293,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-03T17:11:19+08:00">
-                2025-11-03
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-21T17:03:53+08:00">
+                2025-11-21
               </time>
             
 
@@ -314,18 +316,7 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
+                  <a href="/categories/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
                     <span itemprop="name">Linux内核基础</span>
                   </a>
                 </span>
@@ -336,8 +327,8 @@
                 
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/" itemprop="url" rel="index">
-                    <span itemprop="name">内核原理</span>
+                  <a href="/categories/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/" itemprop="url" rel="index">
+                    <span itemprop="name">基本概念</span>
                   </a>
                 </span>
 
@@ -378,38 +369,17 @@
       
 
       
-        <ol>
-<li>同步机制SRCU机制<br> <strong>SRCU (Sleepable Read-Copy-Update)</strong> 是一种允许“读者”在读取共享数据时<strong>睡眠</strong>的 RCU 机制。<ol>
-<li><p>经典RCU(Read-Copy-Update)是一种为“读多写少”场景优化的同步机制。它的核心思想是：</p>
-<ul>
-<li><strong>读者（Reader）</strong>：读取数据时，<strong>几乎没有性能开销</strong>（不需要锁，甚至没有原子操作）。</li>
-<li><strong>写者（Updater）</strong>：更新数据时，它不直接修改，而是：<ol>
-<li><strong>Copy</strong>：复制一份旧数据。</li>
-<li><strong>Update</strong>：修改这份<strong>副本</strong>。</li>
-<li><strong>Replace</strong>：用一个原子性的指针操作，将指向旧数据的指针“切换”为指向新数据。</li>
-<li><strong>Wait</strong>：等待一个“宽限期”（Grace Period），确保所有在“切换”之前进入的读者都已经完成了读取。</li>
-<li><strong>Reclaim</strong>：宽限期结束后，安全地释放旧数据的内存。<br> <strong>读者在RUC读临界区内绝对禁止睡眠或阻塞（<code>rcu_read_lock()</code> 和 <code>rcu_read_unlock()</code> 之间）</strong></li>
-</ol>
-</li>
-</ul>
-</li>
-<li><p>SRCU引入了两个关键概念来解决“可睡眠”问题：<strong>计数器</strong>和<strong>域</strong>。</p>
-<p> 与RCU的全局性不同，SRCU是基于域的。必须先定义一个 <code>struct srcu_struct</code> 变量，这个变量就代表一个独立的 SRCU 保护域。</p>
+        <p>NAPI（New API）是Linux网络处理高吞吐量的核心软件机制。具体来说，它是 Linux 内核网络子系统中的一种<strong>数据包处理框架</strong>（New API），旨在提高高速网络环境下的处理效率。为了解决如下问题：<br>每来一个网络包，网卡就触发一次CPU中断。</p>
+<p>NAPI的解决方案是中断+轮询：</p>
 <ol>
-<li>读者使用<code>srcu_read_lock</code>来返回一个idx，同时增加在该idx域内的计数+1。并进入读临界区。读者可以在临界区内睡眠。直至<code>srcu_read_unlock</code>后将idx所在域计数器-1。</li>
-<li>写者在<code>rcu_assign_pointer</code>原子性地替换指针过后，调用<code>synchronize_srcu</code>来完成如下的工作：<ul>
-<li><strong>“翻转”批次</strong>：假设当前所有读者都在“批次 0”上登记。<code>synchronize_srcu</code> 会将“域”的当前批次索引从 <code>0</code> 翻转到 <code>1</code>。</li>
-<li><strong>等待旧批次清零</strong>：从这一刻起，<strong>新</strong>进入的读者会通过 <code>srcu_read_lock()</code> 获得索引 <code>1</code>，并在“批次 1”的计数器上登记。</li>
-<li><code>synchronize_srcu</code> 会<strong>循环等待</strong>，直到“批次 0”的读者计数变为 0。</li>
-<li><strong>等待完成</strong>：一旦“批次 0”的计数器变为 0，就意味着在 <code>synchronize_srcu</code> <strong>开始之前</strong>进入的所有读者（无论它们睡了多久）都已经调用 <code>srcu_read_unlock()</code> 退出了。</li>
-<li>函数返回，宽限期结束。写者现在可以安全地释放旧数据了。</li>
-</ul>
-</li>
+<li>中断：当第一个包到来时，触发中断，通知CPU。</li>
+<li>关闭终端：驱动程序立刻关闭该网卡的接收中断。</li>
+<li>调度轮询：驱动指示内核加入到Poll List</li>
+<li>轮询：内核在软中断阶段，调用驱动提供的virtnet_poll还敢书，来一次性取走若干包</li>
+<li>恢复：队列空了，则重新开启终端等待下一次数据。</li>
 </ol>
-</li>
-</ol>
-</li>
-</ol>
+<p>在内核中的NAPI实际应用可以查看Virtnet在收包过程中的使用[[Virtnet收包过程#NAPI机制与中断抑制]]</p>
+<p>在实现中，NAPI本质上就是一个辅助数据结构<code>struct napi_struct</code><br>，相当于驱动和Host之间的一份协议。</p>
 
       
     </div>
@@ -425,6 +395,14 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/net/" rel="tag"># net</a>
+          
+            <a href="/tags/Linux/" rel="tag"># Linux</a>
+          
+        </div>
+      
 
       
       
@@ -434,8 +412,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2025/11/03/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/SMP%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7/" rel="next" title="">
-                <i class="fa fa-chevron-left"></i> 
+              <a href="/2025/11/17/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtqueue/" rel="next" title="virtqueue">
+                <i class="fa fa-chevron-left"></i> virtqueue
               </a>
             
           </div>
@@ -444,8 +422,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/11/05/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/KVM/vmx_handle_exit%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" rel="prev" title="vmx_handle_exit学习记录">
-                vmx_handle_exit学习记录 <i class="fa fa-chevron-right"></i>
+              <a href="/2025/11/22/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/VirtIO/virtio-net/virtnet%E7%89%B9%E6%80%A7%E4%BD%8Dfeature%20bit/" rel="prev" title="virtnet特性位feature bit">
+                virtnet特性位feature bit <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -514,7 +492,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-count">36</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -525,7 +503,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>

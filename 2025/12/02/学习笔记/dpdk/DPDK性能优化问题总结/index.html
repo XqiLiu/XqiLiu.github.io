@@ -79,13 +79,15 @@
 
 
 
+<meta name="description" content="DPDK的内存性能优化 采用了HugePages[[DPDK的内存管理：Mbuf和Mempool#物理层：Hugepages 对比 4KB页]]  优化点：使用 2MB 或 1GB 的内存页，而不是 4KB。 收益：大幅减少页表项，降低 TLB Miss（转换后备缓冲器缺失）的概率。   无锁环形队列与Per-Core Caceh[[DPDK的内存管理：Mbuf和Mempool#并发层：Per-C">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://xqiliu.github.io/2025/11/30/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%AE%9E%E9%AA%8C/index.html">
+<meta property="og:title" content="DPDK性能优化问题总结">
+<meta property="og:url" content="https://xqiliu.github.io/2025/12/02/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/DPDK%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E9%97%AE%E9%A2%98%E6%80%BB%E7%BB%93/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="DPDK的内存性能优化 采用了HugePages[[DPDK的内存管理：Mbuf和Mempool#物理层：Hugepages 对比 4KB页]]  优化点：使用 2MB 或 1GB 的内存页，而不是 4KB。 收益：大幅减少页表项，降低 TLB Miss（转换后备缓冲器缺失）的概率。   无锁环形队列与Per-Core Caceh[[DPDK的内存管理：Mbuf和Mempool#并发层：Per-C">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2025-11-30T12:57:39.229Z">
-<meta property="article:modified_time" content="2025-11-30T12:57:39.229Z">
+<meta property="article:published_time" content="2025-12-02T13:14:18.439Z">
+<meta property="article:modified_time" content="2025-12-04T06:58:46.255Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -117,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="https://XqiLiu.github.io/2025/11/30/学习笔记/dpdk/vhost-user/vhost-user实验/"/>
+  <link rel="canonical" href="https://XqiLiu.github.io/2025/12/02/学习笔记/dpdk/DPDK性能优化问题总结/"/>
 
 
 
 
 
-  <title> | Hexo</title>
+  <title>DPDK性能优化问题总结 | Hexo</title>
   
 
 
@@ -260,7 +262,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/11/30/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%AE%9E%E9%AA%8C/">
+    <link itemprop="mainEntityOfPage" href="https://XqiLiu.github.io/2025/12/02/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/DPDK%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E9%97%AE%E9%A2%98%E6%80%BB%E7%BB%93/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -277,7 +279,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">DPDK性能优化问题总结</h1>
         
 
         <div class="post-meta">
@@ -289,8 +291,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-11-30T20:57:39+08:00">
-                2025-11-30
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2025-12-02T21:14:18+08:00">
+                2025-12-02
               </time>
             
 
@@ -312,30 +314,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index">
-                    <span itemprop="name">学习笔记</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/" itemprop="url" rel="index">
+                  <a href="/categories/dpdk/" itemprop="url" rel="index">
                     <span itemprop="name">dpdk</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/" itemprop="url" rel="index">
-                    <span itemprop="name">vhost-user</span>
                   </a>
                 </span>
 
@@ -376,7 +356,45 @@
       
 
       
-        
+        <h1 id="DPDK的内存性能优化"><a href="#DPDK的内存性能优化" class="headerlink" title="DPDK的内存性能优化"></a>DPDK的内存性能优化</h1><ol>
+<li><strong>采用了HugePage</strong>s[[DPDK的内存管理：Mbuf和Mempool#物理层：Hugepages 对比 4KB页]] <ul>
+<li><strong>优化点</strong>：使用 2MB 或 1GB 的内存页，而不是 4KB。</li>
+<li><strong>收益</strong>：大幅减少页表项，降低 <strong>TLB Miss</strong>（转换后备缓冲器缺失）的概率。</li>
+</ul>
+</li>
+<li><strong>无锁环形队列与Per-Core Caceh</strong>[[DPDK的内存管理：Mbuf和Mempool#并发层：Per-Core Cache 对比 锁竞争]]<ul>
+<li><strong>优化点</strong>：将线程绑定到固定的 CPU 核心（<code>lcore</code>），并隔离该核心（Isolcpus）。同时Mempool 在每个核都有私有缓存。</li>
+<li><strong>收益</strong>：消除了<strong>线程调度 (Context Switch)</strong> 带来的开销，保证 CPU Cache 不会被其他进程冲刷掉；99% 的内存申请&#x2F;释放不需要去访问全局队列，实现了<strong>零竞争</strong>。</li>
+</ul>
+</li>
+<li>Mbuf 结构优化[[DPDK的内存管理：Mbuf和Mempool#Mbuf结构设计]]<ul>
+<li><strong>优化点</strong>：正如我们讨论的，将常用字段塞进前 64 字节，数据紧挨着结构体。</li>
+<li><strong>收益</strong>：极致的 <strong>Cache Locality</strong>，减少 Cache Miss。</li>
+</ul>
+</li>
+</ol>
+<h1 id="DPDK架构层优化设计"><a href="#DPDK架构层优化设计" class="headerlink" title="DPDK架构层优化设计"></a>DPDK架构层优化设计</h1><ol>
+<li><strong>Kernel Bypass设计</strong>[[Kernel Bypass]]<ul>
+<li><strong>优化点</strong>：跳过了Linux内核协议栈，直接在用户态接管网卡</li>
+<li><strong>收益</strong>：消除了<strong>System Call</strong>和内核态到用户态的数据拷贝（copy_to_user）的开销</li>
+</ul>
+</li>
+<li><strong>独占与绑定</strong><ul>
+<li><strong>优化点</strong>：将线程绑定到固定的 CPU 核心（<code>lcore</code>），并隔离该核心（Isolcpus）。</li>
+<li><strong>收益</strong>：消除了<strong>线程调度 (Context Switch)</strong> 带来的开销，保证 CPU Cache 不会被其他进程冲刷掉。</li>
+</ul>
+</li>
+<li><strong>NUMA感知</strong><ul>
+<li><strong>优化点</strong>：网卡插在哪个 CPU 插槽，就用那个 CPU 的核去处理，内存也从那个 CPU 的本地内存条分配。</li>
+<li><strong>收益</strong>：消除了跨 QPI 总线访问远程内存的延迟（本地内存访问通常比远程快 20-30%）</li>
+</ul>
+</li>
+</ol>
+<h1 id="I-O模型层"><a href="#I-O模型层" class="headerlink" title="I&#x2F;O模型层"></a>I&#x2F;O模型层</h1><ol>
+<li><strong>PMD轮询模式</strong></li>
+<li><strong>批量处理（Burst）</strong></li>
+</ol>
+
       
     </div>
     
@@ -400,7 +418,7 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%86%85%E6%A0%B8%E5%8E%9F%E7%90%86/Libvirt%E6%8E%A5%E5%8F%A3/" rel="next" title="">
+              <a href="/2025/12/01/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/DPDK%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%9AMbuf%E5%92%8CMempool/" rel="next" title="">
                 <i class="fa fa-chevron-left"></i> 
               </a>
             
@@ -410,7 +428,7 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2025/12/01/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/Kernel%20Bypass/" rel="prev" title="">
+              <a href="/2025/12/04/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/dpdk%E7%A4%BA%E4%BE%8B%E7%A8%8B%E5%BA%8F%E8%BF%9B%E5%8C%96%E4%B9%8B%E8%B7%AF/" rel="prev" title="">
                  <i class="fa fa-chevron-right"></i>
               </a>
             
@@ -464,8 +482,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -480,7 +507,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-count">36</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -491,7 +518,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -525,6 +552,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#DPDK%E7%9A%84%E5%86%85%E5%AD%98%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="nav-number">1.</span> <span class="nav-text">DPDK的内存性能优化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DPDK%E6%9E%B6%E6%9E%84%E5%B1%82%E4%BC%98%E5%8C%96%E8%AE%BE%E8%AE%A1"><span class="nav-number">2.</span> <span class="nav-text">DPDK架构层优化设计</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#I-O%E6%A8%A1%E5%9E%8B%E5%B1%82"><span class="nav-number">3.</span> <span class="nav-text">I&#x2F;O模型层</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

@@ -79,15 +79,15 @@
 
 
 
-<meta name="description" content="传统路径：网卡 -&gt; 硬件中断 -&gt; 内核驱动 -&gt; Linux网络协议栈（IP&#x2F;TCP）-&gt; Socket 接口 -&gt; 用户态程序。  性能分析：只要数据经过内核，就需要Context Switch和内存拷贝。  DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）">
+<meta name="description" content="传统路径：网卡 -&gt; 硬件中断 -&gt; 内核驱动 -&gt; Linux网络协议栈（IP&#x2F;TCP）-&gt; Socket 接口 -&gt; 用户态程序。  性能分析：只要数据经过内核，就需要Context Switch和内存拷贝。  DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）  性能分析： DPDK通过VFIO&#x2F;UIO等方">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo">
 <meta property="og:url" content="https://xqiliu.github.io/2025/12/01/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/Kernel%20Bypass/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="传统路径：网卡 -&gt; 硬件中断 -&gt; 内核驱动 -&gt; Linux网络协议栈（IP&#x2F;TCP）-&gt; Socket 接口 -&gt; 用户态程序。  性能分析：只要数据经过内核，就需要Context Switch和内存拷贝。  DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）">
+<meta property="og:description" content="传统路径：网卡 -&gt; 硬件中断 -&gt; 内核驱动 -&gt; Linux网络协议栈（IP&#x2F;TCP）-&gt; Socket 接口 -&gt; 用户态程序。  性能分析：只要数据经过内核，就需要Context Switch和内存拷贝。  DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）  性能分析： DPDK通过VFIO&#x2F;UIO等方">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-12-01T04:00:45.995Z">
-<meta property="article:modified_time" content="2025-12-01T04:05:36.070Z">
+<meta property="article:modified_time" content="2025-12-03T07:02:43.194Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 
@@ -371,7 +371,16 @@
 <ul>
 <li>性能分析：只要数据经过内核，就需要<strong>Context Switch</strong>和内存拷贝。</li>
 </ul>
-<h2 id="DPDK路径：采用了Kenel-Bypass：网卡-DPDK应用程序（用户态）"><a href="#DPDK路径：采用了Kenel-Bypass：网卡-DPDK应用程序（用户态）" class="headerlink" title="DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）"></a><strong>DPDK路径</strong>：采用了Kenel Bypass：网卡-&gt;<strong>DPDK应用程序</strong>（用户态）</h2>
+<p><strong>DPDK路径</strong>：采用了Kenel Bypass：网卡-&gt;<strong>DPDK应用程序</strong>（用户态）</p>
+<ul>
+<li>性能分析：<ul>
+<li>DPDK通过VFIO&#x2F;UIO等方法直接接管了网卡的数据。通过DMA的方式直接得到数据而不需要copy数据（指的是不需要CPU参与的copy）</li>
+<li>绕过了内核协议栈到用户态程序的<code>copy_to_user</code>这一跨用户-内核态的数据拷贝。因为DPDK本身就是用户态应用程序，直接传递数据指针，利用共享内存就可以传输数据。</li>
+<li>本质上是zero-copy的实现，这是DPDK的高性能原因之一。</li>
+</ul>
+</li>
+</ul>
+
       
     </div>
     
@@ -395,7 +404,7 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2025/11/30/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/dpdk/vhost-user/vhost-user%E5%AE%9E%E9%AA%8C/" rel="next" title="">
+              <a href="/2025/11/29/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/Linux%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5/Libvirt%E6%8E%A5%E5%8F%A3/" rel="next" title="">
                 <i class="fa fa-chevron-left"></i> 
               </a>
             
@@ -459,17 +468,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            Table of Contents
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            Overview
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -484,7 +484,7 @@
               
                 <a href="/archives/%7C%7C%20archive">
               
-                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-count">36</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -495,7 +495,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -529,22 +529,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#DPDK%E8%B7%AF%E5%BE%84%EF%BC%9A%E9%87%87%E7%94%A8%E4%BA%86Kenel-Bypass%EF%BC%9A%E7%BD%91%E5%8D%A1-DPDK%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%EF%BC%88%E7%94%A8%E6%88%B7%E6%80%81%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">DPDK路径：采用了Kenel Bypass：网卡-&gt;DPDK应用程序（用户态）</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
