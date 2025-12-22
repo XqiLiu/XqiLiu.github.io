@@ -1,6 +1,18 @@
 ---
-title: Welcome to Quartz
+title: "XqiLiu's Blog"
 ---
 
-This is a blank Quartz installation.
-See the [documentation](https://quartz.jzhao.xyz) for how to get started.
+<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 3rem;">
+  <img src="https://github.com/XqiLiu.png" style="width: 100px; border-radius: 50%;">
+  <div>
+    <h1>Hi, I'm XqiLiu 👋</h1>
+    <p>记录分享关于虚拟化、DPDK的学习笔记。</p>
+    <div>
+       <a href="https://github.com/xxx">GitHub</a> · <a href="/resume">Resume</a>
+    </div>
+  </div>
+</div>
+
+---
+
+## 📅 最近更新 (Recent Posts)

@@ -8,12 +8,13 @@ export const sharedPageComponents: SharedLayout = {
   afterBody: [],
   footer: Component.Footer({
     links: {
-      GitHub: "https://github.com/jackyzha0/quartz",
-      "Discord Community": "https://discord.gg/cRFFHYye7t",
+      // 外部链接（记得加双引号）
+      "GitHub": "https://github.com/XqiLiu",
+      // 内部链接（直接写路径，对应 content/resume.md）
+      "简历": "/Resume", 
     },
   }),
 }
-
 // components for pages that display a single page (e.g. a single note)
 export const defaultContentPageLayout: PageLayout = {
   beforeBody: [
@@ -39,6 +40,20 @@ export const defaultContentPageLayout: PageLayout = {
       ],
     }),
     Component.Explorer(),
+  ],
+  afterBody: [
+    Component.ConditionalRender({
+      // 1. 设置组件：显示最近的 10 篇文章，标题叫“最近更新”
+      component: Component.RecentNotes({ 
+        title: "📅 最近更新", 
+        limit: 10,
+        showTags: true,     // 显示标签
+        filter: (f) => !f.slug!.startsWith("tags/") // 过滤掉 tag 页面，只显示笔记
+      }),
+      // 2. 设置条件：只有当页面 slug 是 "index" 时才显示
+      // 这样你的普通文章页底部就不会出现这个列表了
+      condition: (page) => page.fileData.slug === "index"
+    }),
   ],
   right: [
     Component.Graph(),
