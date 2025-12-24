@@ -8,7 +8,7 @@ title: "XqiLiu's Blog"
     <h1>Hi, I'm XqiLiu 👋</h1>
     <p>记录分享关于虚拟化、DPDK的学习笔记。</p>
     <div>
-       <a href="https://github.com/XqiLiu>GitHub</a> · <a href="/content/Resume.md">Resume</a>
+       <a href="https://github.com/XqiLiu">GitHub</a> · <a href="/content/Resume.md">Resume</a>
     </div>
   </div>
 </div>
