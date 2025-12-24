@@ -11,7 +11,7 @@ export const sharedPageComponents: SharedLayout = {
       // 外部链接（记得加双引号）
       "GitHub": "https://github.com/XqiLiu",
       // 内部链接（直接写路径，对应 content/resume.md）
-      "简历": "/Resume", 
+      "简历": "content/resume.md", 
     },
   }),
 }
