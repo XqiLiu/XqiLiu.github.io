@@ -3,7 +3,7 @@ categories:
   - dpdk
   - 基于DPDK的用户态RoCEv2协议栈原型
 date: 2025-12-23T20:11:00
-title: 实现一个Verbs Client
+title: 第三章：实现一个Verbs Client
 tags:
   - RDMA
 ---
