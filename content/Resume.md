@@ -29,7 +29,7 @@ summary = "刘翔奇的个人简历 - 系统开发工程师"
 ## 🛠 专业技能
 
 * **编程语言:** **Rust**, **C**, **C++**, Python
-* **高性能网络:** 熟悉网络编程、I/O 多路复用 (muduo / io_uring 集成)；熟悉 **DPDK**、**VPP**。
+* **高性能网络:** 熟悉网络编程、I/O 多路复用 (muduo / io_uring 集成)；熟悉 **DPDK**、**RDMA**。
 * **虚拟化:** 深入理解 **KVM**、**Virtio** 的源码与机制原理。
 * **工具链:** Git, GCC, CMake, Docker。
 

@@ -113,17 +113,15 @@ static inline int virtqueue_add(struct virtqueue *_vq,
 这里是virtio的从v1.0到v1.1的核心变革。[[virtqueue#virtiov1.1]]
 如果是传统v1.0版本，则是不支持packed_ring。否则是支持packed_ring模式从而提供了缓存命中率，提升了性能。
 接下来还是简单以v1.0作为讨论基础，介绍一下他的执行工作：
-1. 判断SG的列表长度和virtqueue的配置，来选择hi用indirect mode还是direct mode。
-	- 如果是indirect，是因为`total_sg`较大，驱动会通过kmalloc分配一块独立的非连续内存来存放这一组描述符表。。这样该操作仅会消耗1个描述符。见笑了主环的随便化，提高主环的能容纳的请求总数。
-	- 直接模式就是直接小号`total_sg`个主环描述符。
+1. 判断SG的列表长度和virtqueue的配置，来选择是用indirect mode还是direct mode。
+	- 如果是indirect，是因为`total_sg`较大，驱动会通过kmalloc分配一块独立的非连续内存来存放这一组描述符表。。这样该操作仅会消耗1个描述符。减小了主环的碎片化，提高主环的能容纳的请求总数。
+	- 直接模式就是直接消耗`total_sg`个主环描述符。
 2. 构造描述符链表，把OS的物理内存地址填入Virtio硬件定义的vring_desc结构体中，并建立链表关系。
-	- 遍历
-	- 
-	- 输入的sgs，针对每一个segment都执行：
+	- 遍历输入的sgs，针对每一个segment都执行：
 		1. DMA映射，获取该片段的物理地址和长度
 		2. 填充描述符，填写到vring_desc
 		3. 设置标志位，来区分是indirect的描述符；还是说这是一个发送队列或接收队列；抑或是说这是一并不是数据的终点，还有Next。
-		4. 链接索引，只想下一个空闲描述符的索引。
+		4. 链接索引，指向下一个空闲描述符的索引。
 3. 保存驱动的上下文。建立Ring索引和操作系统数据结构之间的映射，从而可以在请求完成时进行资源回收。
 	- virtqueue为了一个名为`desc_state`的私有数组，仅驱动可见
 		- 保存Cookie，将传入的data指针（发包流程中的skb的指针）保存在`desc_state[head]`中，其中head是本次请求所占用的第一个描述符的索引。

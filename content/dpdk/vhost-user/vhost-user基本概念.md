@@ -13,7 +13,7 @@ vhost-user是DPDK技术下所实现，采用vhost协议的一个用户态库。
 # 性能优化迭代
 ## virtnet-QEMU模式：
 这是基本模拟的方式。路径最长，流程是：
-- Guest -> virtnet -> VM-Exit -> KVM（处理不了IO）-> QMUE（用户态模拟）-> Host Kernel(TAP) -> send
+- Guest -> virtnet -> VM-Exit -> KVM（处理不了IO）-> QEMU（用户态模拟）-> Host Kernel(TAP) -> send
 这一模式下，virtnet作为Virtio模型的前端，QEMU的软件模拟作为了Virtio模型的后端。
 
 很明显这一流程上下文切换次数太多，数据拷贝次数太多。
