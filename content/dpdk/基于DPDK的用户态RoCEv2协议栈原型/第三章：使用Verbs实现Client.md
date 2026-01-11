@@ -136,7 +136,7 @@ int modify_qp_to_rts(struct ibv_qp *qp) {
         .sq_psn = 0,
         .max_rd_atomic = 1
     };
-    flags = IBV_QP_STATE | IBV_QP_TIMEOUT | IBV_QP_RETRY_CNT |
+    flags = IBV_QP_STATE | IBV_QP/_TIMEOUT | IBV_QP_RETRY_CNT |
             IBV_QP_RNR_RETRY | IBV_QP_SQ_PSN | IBV_QP_MAX_QP_RD_ATOMIC;
     return ibv_modify_qp(qp, &attr, flags);
 }
